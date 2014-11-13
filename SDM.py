@@ -20,7 +20,7 @@ from armoryengine.ArmoryUtils import BITCOIN_PORT, LOGERROR, hex_to_binary, \
    launchProcess, killProcessTree, killProcess, LOGWARN, RightNow, HOUR, \
    PyBackgroundThread, touchFile, DISABLE_TORRENTDL, secondsToHumanTime, \
    bytesToHumanSize, MAGIC_BYTES, deleteBitcoindDBs, TheTDM, satoshiIsAvailable,\
-   MEGABYTE, ARMORY_HOME_DIR, CLI_OPTIONS
+   MEGABYTE, ARMORY_HOME_DIR, CLI_OPTIONS, COIN, USE_NAMECOIN_TESTNET
 from bitcoinrpc_jsonrpc import authproxy
 
 
@@ -277,7 +277,10 @@ class SatoshiDaemonManager(object):
       LOGINFO('Total size of files in %s is %s' % (blockDir, sizeStr))
 
       # If they have only a small portion of the blockchain, do it
-      szThresh = 100*MEGABYTE if USE_TESTNET else 6*GIGABYTE
+      if USE_TESTNET or USE_NAMECOIN_TESTNET:
+         szThresh = 100*MEGABYTE
+      else:
+         szThresh = 6*GIGABYTE
       if blockDirSize < szThresh:
          return True
 
@@ -308,7 +311,7 @@ class SatoshiDaemonManager(object):
       self.failedFindHome = False
       # If we are supplied a path, then ignore the extra exe search paths
       if pathToBitcoindExe==None:
-         pathToBitcoindExe = self.findBitcoind(extraExeSearch)
+         pathToBitcoindExe = self.findDaemon(extraExeSearch)
          if len(pathToBitcoindExe)==0:
             LOGDEBUG('Failed to find bitcoind')
             self.failedFindExe = True
@@ -374,7 +377,7 @@ class SatoshiDaemonManager(object):
 
 
    #############################################################################
-   def findBitcoind(self, extraSearchPaths=[]):
+   def findDaemon(self, extraSearchPaths=[]):
       self.foundExe = []
 
       searchPaths = list(extraSearchPaths)  # create a copy
@@ -382,7 +385,7 @@ class SatoshiDaemonManager(object):
       if OS_WINDOWS:
          # Making sure the search path argument comes with /daemon and /Bitcoin on Windows
 
-         searchPaths.extend([os.path.join(sp, 'Bitcoin') for sp in searchPaths])
+         searchPaths.extend([os.path.join(sp, COIN) for sp in searchPaths])
          searchPaths.extend([os.path.join(sp, 'daemon') for sp in searchPaths])
 
          possBaseDir = []         
@@ -407,7 +410,7 @@ class SatoshiDaemonManager(object):
                   shell = win32com.client.Dispatch('WScript.Shell')
                   targ = shell.CreateShortCut(path).Targetpath
                   targDir = os.path.dirname(targ)
-                  LOGINFO('Found Bitcoin-Qt link on desktop: %s', targDir)
+                  LOGINFO('Found %s-Qt link on desktop: %s', COIN, targDir)
                   possBaseDir.append( targDir )
 
          # Also look in default place in ProgramFiles dirs
@@ -417,12 +420,12 @@ class SatoshiDaemonManager(object):
 
          # Now look at a few subdirs of the
          searchPaths.extend(possBaseDir)
-         searchPaths.extend([os.path.join(p, 'Bitcoin', 'daemon') for p in possBaseDir])
+         searchPaths.extend([os.path.join(p, COIN, 'daemon') for p in possBaseDir])
          searchPaths.extend([os.path.join(p, 'daemon') for p in possBaseDir])
-         searchPaths.extend([os.path.join(p, 'Bitcoin') for p in possBaseDir])
+         searchPaths.extend([os.path.join(p, COIN) for p in possBaseDir])
 
          for p in searchPaths:
-            testPath = os.path.join(p, 'bitcoind.exe')
+            testPath = os.path.join(p, COIN.lower() + '.exe')
             if os.path.exists(testPath):
                self.foundExe.append(testPath)
 
@@ -433,18 +436,18 @@ class SatoshiDaemonManager(object):
          else:
             searchPaths.extend([os.path.join(p, 'bin/32') for p in extraSearchPaths])
 
-         searchPaths.extend(['/usr/lib/bitcoin/'])
+         searchPaths.extend(['/usr/lib/' + COIN.lower() + '/'])
          searchPaths.extend(os.getenv("PATH").split(':'))
 
          for p in searchPaths:
-            testPath = os.path.join(p, 'bitcoind')
+            testPath = os.path.join(p, COIN.lower() + 'd')
             if os.path.exists(testPath):
                self.foundExe.append(testPath)
 
          try:
-            locs = subprocess_check_output(['whereis','bitcoind']).split()
+            locs = subprocess_check_output(['whereis',COIN.lower() + 'd']).split()
             if len(locs)>1:
-               locs = filter(lambda x: os.path.basename(x)=='bitcoind', locs)
+               locs = filter(lambda x: os.path.basename(x)==COIN.lower() + 'd', locs)
                LOGINFO('"whereis" returned: %s', str(locs))
                self.foundExe.extend(locs)
          except:
@@ -461,10 +464,10 @@ class SatoshiDaemonManager(object):
                foundIt=True
 
          if not foundIt:
-            LOGERROR('Bitcoind could not be found in the specified installation:')
+            LOGERROR(COIN + 'd could not be found in the specified installation:')
             for p in extraSearchPaths:
                LOGERROR('   %s', p)
-            LOGERROR('Bitcoind is being started from:')
+            LOGERROR(COIN + 'd is being started from:')
             LOGERROR('   %s', self.foundExe[0])
 
       return self.foundExe
@@ -607,12 +610,16 @@ class SatoshiDaemonManager(object):
 
       pargs = [self.executable]
 
-      if USE_TESTNET:
+      if USE_TESTNET or USE_NAMECOIN_TESTNET:
          testhome = self.satoshiHome[:]
          if self.satoshiHome.endswith('/testnet3/'):
             pargs.append('-datadir=%s' % self.satoshiHome[:-10])
          elif self.satoshiHome.endswith('/testnet3'):
             pargs.append('-datadir=%s' % self.satoshiHome[:-9])
+         elif self.satoshiHome.endswith('/testnet/'):
+            pargs.append('-datadir=%s' % self.satoshiHome[:-9])
+         elif self.satoshiHome.endswith('/testnet'):
+            pargs.append('-datadir=%s' % self.satoshiHome[:-8])
          pargs.append('-testnet')
       else:
          pargs.append('-datadir=%s' % self.satoshiHome)

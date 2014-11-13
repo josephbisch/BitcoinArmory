@@ -304,16 +304,21 @@ class BlockDataManager(object):
    def bdmConfig(self, forInit=False):
 
       blkdir = ""
+      blk1st = ""
       
       if forInit == False:
       # Check for the existence of the Bitcoin-Qt directory         
          if not os.path.exists(self.btcdir):
             raise FileExistsError, ('Directory does not exist: %s' % self.btcdir)
    
-         blkdir = os.path.join(self.btcdir, 'blocks')
-         blk1st = os.path.join(blkdir, 'blk00000.dat')
+         if COIN == 'Namecoin':
+            blkdir = self.btcdir
+            blk1st = os.path.join(blkdir, 'blk0001.dat')
+         else:
+            blkdir = os.path.join(self.btcdir, 'blocks')
+            blk1st = os.path.join(blkdir, 'blk00000.dat')
    
-         # ... and its blk000X.dat files
+         # ... and its blk000X.dat or blk0000x.dat files
          if not os.path.exists(blk1st):
             LOGERROR('Blockchain data not available: %s', blk1st)
             raise FileExistsError, ('Blockchain data not available: %s' % blk1st)
@@ -332,6 +337,7 @@ class BlockDataManager(object):
       bdmConfig.pruneType = Cpp.DB_PRUNE_NONE
       bdmConfig.blkFileLocation = blockdir
       bdmConfig.levelDBLocation = leveldbdir
+      bdmConfig.chain = COIN
       bdmConfig.setGenesisBlockHash(GENESIS_BLOCK_HASH)
       bdmConfig.setGenesisTxHash(GENESIS_TX_HASH)
       bdmConfig.setMagicBytes(MAGIC_BYTES)

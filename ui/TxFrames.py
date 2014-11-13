@@ -153,7 +153,7 @@ class SendBitcoinsFrame(ArmoryFrame):
          Click this button to copy a "bitcoin:" link directly into Armory."""))
       self.connect(btnEnterURI, SIGNAL("clicked()"), self.clickEnterURI)
       fromFrameList = [self.frmSelectedWlt]
-      if not USE_TESTNET:
+      if not(USE_TESTNET or USE_NAMECOIN or USE_NAMECOIN_TESTNET):
          btnDonate = QPushButton("Donate to Armory Developers!")
          ttipDonate = self.main.createToolTipWidget(\
             'Making this software was a lot of work.  You can give back '
@@ -262,7 +262,9 @@ class SendBitcoinsFrame(ArmoryFrame):
            loadCount % donateFreq == (donateFreq-1) and \
            not loadCount == lastPestering and \
            not dnaaDonate and \
-           not USE_TESTNET:
+           not USE_TESTNET and \
+           not USE_NAMECOIN and \
+           not USE_NAMECOIN_TESTNET:
          result = MsgBoxWithDNAA(MSGBOX.Question, 'Please donate!', tr("""
             <i>Armory</i> is the result of thousands of hours of development 
             by very talented coders.  Yet, this software 

@@ -1346,6 +1346,13 @@ class DlgLockboxManager(ArmoryDialog):
       if USE_TESTNET:
          blkExploreTitle = 'View on blockexplorer.com'
          blkExploreURL   = 'http://blockexplorer.com/testnet/tx/%s' % txHash
+      elif USE_NAMECOIN:
+         blkExploreTitle = 'View on bitinfocharts.com'
+         blkExploreURL   = 'https://bitinfocharts.com/namecoin/tx/%s' % txHash
+      elif USE_NAMECOIN_TESTNET:
+         # TODO: Find an explorer that is up-to-date
+         blkExploreTitle = 'View on namecoin.info'
+         blkExploreURL   = 'http://testnet.explorer.namecoin.info/tx/%s' % txHash
       else:
          blkExploreTitle = 'View on blockchain.info'
          blkExploreURL   = 'https://blockchain.info/tx/%s' % txHash

@@ -62,6 +62,7 @@ ARMORY_INFO_SIGN_ADDR = '1NWvhByxfTXPYNT4zMBmEY3VL8QJQtQoei'
 ARMORY_INFO_SIGN_PUBLICKEY = ('04'
       'af4abc4b24ef57547dd13a1110e331645f2ad2b99dfe1189abb40a5b24e4ebd8'
       'de0c1c372cc46bbee0ce3d1d49312e416a1fa9c7bb3e32a7eb3867d1c6d1f715')
+# We can leave SATOSHI_PUBLIC_KEY here, since it is the same for both Bitcoin and Namecoin
 SATOSHI_PUBLIC_KEY = ( '04'
       'fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0'
       'ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284')
@@ -80,6 +81,8 @@ parser.add_option("--satoshi-rpcport", dest="satoshiRpcport",default='DEFAULT',t
 parser.add_option("--dbdir",           dest="leveldbDir",  default='DEFAULT', type='str',          help="Location to store blocks database (defaults to --datadir)")
 parser.add_option("--rpcport",         dest="rpcport",     default='DEFAULT', type="str",          help="RPC port for running armoryd.py")
 parser.add_option("--testnet",         dest="testnet",     default=False,     action="store_true", help="Use the testnet protocol")
+parser.add_option("--namecoin",        dest="namecoin",    default=False,     action="store_true", help="Use Namecoin instead of Bitcoin protocol")
+parser.add_option("--namecoin-testnet", dest="namecoinTestnet", default=False, action="store_true", help="Use Namecoin testnet protocol")
 parser.add_option("--offline",         dest="offline",     default=False,     action="store_true", help="Force Armory to run in offline mode")
 parser.add_option("--nettimeout",      dest="nettimeout",  default=2,         type="int",          help="Timeout for detecting internet connection at startup")
 parser.add_option("--interport",       dest="interport",   default=-1,        type="int",          help="Port for inter-process communication between Armory instances")
@@ -240,6 +243,18 @@ for opt,val in CLI_OPTIONS.__dict__.iteritems():
 USE_TESTNET = CLI_OPTIONS.testnet
 #USE_TESTNET = True
 
+# Use CLI args to determine namecoin or not
+USE_NAMECOIN = CLI_OPTIONS.namecoin
+
+# Use CLI args to determine namecoin testnet or not
+USE_NAMECOIN_TESTNET = CLI_OPTIONS.namecoinTestnet
+
+COIN = 'Bitcoin'
+if USE_NAMECOIN or USE_NAMECOIN_TESTNET:
+   MIN_TX_FEE = 500000
+   MIN_RELAY_TX_FEE = 100000
+   COIN = 'Namecoin'
+
 # Set default port for inter-process communication
 if CLI_OPTIONS.interport < 0:
    CLI_OPTIONS.interport = 8223 + (1 if USE_TESTNET else 0)
@@ -257,7 +272,14 @@ USER_HOME_DIR    = ''
 BTC_HOME_DIR     = ''
 ARMORY_HOME_DIR  = ''
 LEVELDB_DIR      = ''
-SUBDIR = 'testnet3' if USE_TESTNET else ''
+if USE_TESTNET:
+   SUBDIR = 'testnet3'
+elif USE_NAMECOIN:
+   SUBDIR = ''
+elif USE_NAMECOIN_TESTNET:
+   SUBDIR = 'testnet'
+else:
+   SUBDIR = ''
 if OS_WINDOWS:
    OS_NAME         = 'Windows'
    OS_VARIANT      = platform.win32_ver()
@@ -267,27 +289,51 @@ if OS_WINDOWS:
    rt = ctypes.windll.shell32.SHGetFolderPathW(0, 26, 0, 0, ctypes.byref(buffer))
    USER_HOME_DIR = unicode(buffer.value)
                
-   BTC_HOME_DIR    = os.path.join(USER_HOME_DIR, 'Bitcoin', SUBDIR)
+   BTC_HOME_DIR    = os.path.join(USER_HOME_DIR, COIN, SUBDIR)
+   if COIN == 'Namecoin':
+      if USE_NAMECOIN:
+         SUBDIR = 'namecoin'
+      elif USE_NAMECOIN_TESTNET:
+         SUBDIR = 'namecoin_testnet'
+      BLKFILE_DIR = BTC_HOME_DIR
+   else:
+      BLKFILE_DIR = os.path.join(BTC_HOME_DIR, 'blocks')
    ARMORY_HOME_DIR = os.path.join(USER_HOME_DIR, 'Armory', SUBDIR)
-   BLKFILE_DIR     = os.path.join(BTC_HOME_DIR, 'blocks')
-   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR, 'blk00000.dat')
+   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR,
+           'blk0001.dat' if COIN == 'Namecoin' else 'blk00000.dat')
 elif OS_LINUX:
    OS_NAME         = 'Linux'
    OS_VARIANT      = platform.linux_distribution()
    USER_HOME_DIR   = os.getenv('HOME')
-   BTC_HOME_DIR    = os.path.join(USER_HOME_DIR, '.bitcoin', SUBDIR)
+   BTC_HOME_DIR    = os.path.join(USER_HOME_DIR, '.' + COIN.lower(), SUBDIR)
+   if COIN == 'Namecoin':
+      if USE_NAMECOIN:
+         SUBDIR = 'namecoin'
+      elif USE_NAMECOIN_TESTNET:
+         SUBDIR = 'namecoin_testnet'
+      BLKFILE_DIR = BTC_HOME_DIR
+   else:
+      BLKFILE_DIR = os.path.join(BTC_HOME_DIR, 'blocks')
    ARMORY_HOME_DIR = os.path.join(USER_HOME_DIR, '.armory', SUBDIR)
-   BLKFILE_DIR     = os.path.join(BTC_HOME_DIR, 'blocks')
-   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR, 'blk00000.dat')
+   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR,
+           'blk0001.dat' if COIN == 'Namecoin' else 'blk00000.dat')
 elif OS_MACOSX:
    platform.mac_ver()
    OS_NAME         = 'MacOSX'
    OS_VARIANT      = platform.mac_ver()
    USER_HOME_DIR   = os.path.expanduser('~/Library/Application Support')
-   BTC_HOME_DIR    = os.path.join(USER_HOME_DIR, 'Bitcoin', SUBDIR)
+   BTC_HOME_DIR    = os.path.join(USER_HOME_DIR, COIN, SUBDIR)
+   if COIN == 'Namecoin':
+      if USE_NAMECOIN:
+         SUBDIR = 'namecoin'
+      elif USE_NAMECOIN_TESTNET:
+         SUBDIR = 'namecoin_testnet'
+      BLKFILE_DIR = BTC_HOME_DIR
+   else:
+      BLKFILE_DIR = os.path.join(BTC_HOME_DIR, 'blocks')
    ARMORY_HOME_DIR = os.path.join(USER_HOME_DIR, 'Armory', SUBDIR)
-   BLKFILE_DIR     = os.path.join(BTC_HOME_DIR, 'blocks')
-   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR, 'blk00000.dat')
+   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR, 
+           'blk0001.dat' if COIN == 'Namecoin' else 'blk00000.dat')
 else:
    print '***Unknown operating system!'
    print '***Cannot determine default directory locations'
@@ -302,6 +348,8 @@ BLOCKCHAINS = {}
 BLOCKCHAINS['\xf9\xbe\xb4\xd9'] = "Main Network"
 BLOCKCHAINS['\xfa\xbf\xb5\xda'] = "Old Test Network"
 BLOCKCHAINS['\x0b\x11\x09\x07'] = "Test Network (testnet3)"
+BLOCKCHAINS['\xf9\xbe\xb4\xfe'] = "Namecoin Network"
+BLOCKCHAINS['\xfa\xbf\xb5\xfe'] = "Namecoin Test Network"
 
 NETWORKS = {}
 NETWORKS['\x00'] = "Main Network"
@@ -354,6 +402,11 @@ if not CLI_OPTIONS.satoshiHome.lower()=='default':
       testnetTry = os.path.join(CLI_OPTIONS.satoshiHome, 'testnet3')
       if os.path.exists(testnetTry):
          CLI_OPTIONS.satoshiHome = testnetTry
+   if USE_NAMECOIN_TESTNET:
+      namecoinTestnetTry = os.path.join(CLI_OPTIONS.satoshiHome,
+            'testnet')
+      if os.path.exists(namecoinTestnetTry):
+         CLI_OPTIONS.satoshiHome = namecoinTestnetTry
 
    if not os.path.exists(CLI_OPTIONS.satoshiHome):
       print 'Directory "%s" does not exist!  Using default!' % \
@@ -432,7 +485,58 @@ if not os.path.exists(LEVELDB_DIR):
 
 
 ##### MAIN NETWORK IS DEFAULT #####
-if not USE_TESTNET:
+if USE_TESTNET:
+   BITCOIN_PORT = 18333
+   BITCOIN_RPC_PORT = 18332
+   ARMORY_RPC_PORT     = 18225
+   MAGIC_BYTES  = '\x0b\x11\x09\x07'
+   GENESIS_BLOCK_HASH_HEX  = '43497fd7f826957108f4a30fd9cec3aeba79972084e90ead01ea330900000000'
+   GENESIS_BLOCK_HASH      = 'CI\x7f\xd7\xf8&\x95q\x08\xf4\xa3\x0f\xd9\xce\xc3\xae\xbay\x97 \x84\xe9\x0e\xad\x01\xea3\t\x00\x00\x00\x00'
+   GENESIS_TX_HASH_HEX     = '3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a'
+   GENESIS_TX_HASH         = ';\xa3\xed\xfdz{\x12\xb2z\xc7,>gv\x8fa\x7f\xc8\x1b\xc3\x88\x8aQ2:\x9f\xb8\xaaK\x1e^J'
+   ADDRBYTE = '\x6f'
+   P2SHBYTE = '\xc4'
+   PRIVKEYBYTE = '\xef'
+
+   # 
+   BLOCKEXPLORE_NAME     = 'blockexplorer.com'
+   BLOCKEXPLORE_URL_TX   = 'http://blockexplorer.com/testnet/tx/%s'
+   BLOCKEXPLORE_URL_ADDR = 'http://blockexplorer.com/testnet/address/%s'
+elif USE_NAMECOIN:
+   BITCOIN_PORT = 8334
+   BITCOIN_RPC_PORT = 8336
+   ARMORY_RPC_PORT = 8228
+   MAGIC_BYTES = '\xf9\xbe\xb4\xfe'
+   GENESIS_BLOCK_HASH_HEX  = '70c7a9f0a2fb3d48e635a70d5b157c807e58c8fb45eb2c5e2cb7620000000000'
+   GENESIS_BLOCK_HASH      = 'p\xc7\xa9\xf0\xa2\xfb=H\xe65\xa7\r[\x15|\x80~X\xc8\xfbE\xeb,^,\xb7b\x00\x00\x00\x00\x00'
+   GENESIS_TX_HASH_HEX     = '0dcbd3e6f061215bf3b3383c8ce2ec201bc65acde32595449ac86890bd2dc641'
+   GENESIS_TX_HASH         = '\r\xcb\xd3\xe6\xf0a![\xf3\xb38<\x8c\xe2\xec \x1b\xc6Z\xcd\xe3%\x95D\x9a\xc8h\x90\xbd-\xc6A'
+   ADDRBYTE = '\x34'
+   P2SHBYTE = ''
+   PRIVKEYBYTE = '\xb4'
+
+   #
+   BLOCKEXPLORE_NAME     = 'https://bitinfocharts.com/namecoin/'
+   BLOCKEXPLORE_URL_TX   = 'https://bitinfocharts.com/namecoin/tx/%s'
+   BLOCKEXPLORE_URL_ADDR = 'https://bitinfocharts.com/namecoin/address/%s'
+elif USE_NAMECOIN_TESTNET:
+   BITCOIN_PORT = 18334
+   BITCOIN_RPC_PORT = 18336
+   ARMORY_RPC_PORT = 18228
+   MAGIC_BYTES = '\xfa\xbf\xb5\xfe'
+   GENESIS_BLOCK_HASH_HEX  = '08b067b31dc139ee8e7a76a4f2cfcca477c4c06e1ef89f4ae308951907000000'
+   GENESIS_BLOCK_HASH      = '\x08\xb0g\xb3\x1d\xc19\xee\x8ezv\xa4\xf2\xcf\xcc\xa4w\xc4\xc0n\x1e\xf8\x9fJ\xe3\x08\x95\x19\x07\x00\x00\x00'
+   GENESIS_TX_HASH_HEX     = '3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a'
+   GENESIS_TX_HASH         = ';\xa3\xed\xfdz{\x12\xb2z\xc7,>gv\x8fa\x7f\xc8\x1b\xc3\x88\x8aQ2:\x9f\xb8\xaaK\x1e^J'
+   ADDRBYTE = '\x6f'
+   P2SHBYTE = ''
+   PRIVKEYBYTE = '\xef'
+
+   #
+   BLOCKEXPLORE_NAME     = 'http://testnet.explorer.namecoin.info/'
+   BLOCKEXPLORE_URL_TX   = 'http://testnet.explorer.namecoin.info/tx/%s'
+   BLOCKEXPLORE_URL_ADDR = 'http://testnet.explorer.namecoin.info/a/%s'
+else:
    # TODO:  The testnet genesis tx hash can't be the same...?
    BITCOIN_PORT = 8333
    BITCOIN_RPC_PORT = 8332
@@ -450,23 +554,6 @@ if not USE_TESTNET:
    BLOCKEXPLORE_NAME     = 'blockchain.info'
    BLOCKEXPLORE_URL_TX   = 'https://blockchain.info/tx/%s'
    BLOCKEXPLORE_URL_ADDR = 'https://blockchain.info/address/%s'
-else:
-   BITCOIN_PORT = 18333
-   BITCOIN_RPC_PORT = 18332
-   ARMORY_RPC_PORT     = 18225
-   MAGIC_BYTES  = '\x0b\x11\x09\x07'
-   GENESIS_BLOCK_HASH_HEX  = '43497fd7f826957108f4a30fd9cec3aeba79972084e90ead01ea330900000000'
-   GENESIS_BLOCK_HASH      = 'CI\x7f\xd7\xf8&\x95q\x08\xf4\xa3\x0f\xd9\xce\xc3\xae\xbay\x97 \x84\xe9\x0e\xad\x01\xea3\t\x00\x00\x00\x00'
-   GENESIS_TX_HASH_HEX     = '3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a'
-   GENESIS_TX_HASH         = ';\xa3\xed\xfdz{\x12\xb2z\xc7,>gv\x8fa\x7f\xc8\x1b\xc3\x88\x8aQ2:\x9f\xb8\xaaK\x1e^J'
-   ADDRBYTE = '\x6f'
-   P2SHBYTE = '\xc4'
-   PRIVKEYBYTE = '\xef'
-
-   # 
-   BLOCKEXPLORE_NAME     = 'blockexplorer.com'
-   BLOCKEXPLORE_URL_TX   = 'http://blockexplorer.com/testnet/tx/%s'
-   BLOCKEXPLORE_URL_ADDR = 'http://blockexplorer.com/testnet/address/%s'
 
 # These are the same regardless of network
 # They are the way data is stored in the database which is network agnostic
@@ -3715,4 +3802,4 @@ def isInternetAvailable():
 def onlineModeIsPossible(btcdir=BTC_HOME_DIR):
    return (CLI_OPTIONS.forceOnline or isInternetAvailable()) and \
       satoshiIsAvailable() and \
-      os.path.exists(os.path.join(btcdir, 'blocks'))
+      (os.path.exists(os.path.join(btcdir, 'blocks')) if COIN == 'Bitcoin' else 1)

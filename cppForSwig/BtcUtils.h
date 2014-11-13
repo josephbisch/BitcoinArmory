@@ -67,6 +67,10 @@ class LedgerEntry;
 #define MAINNET_GENESIS_HASH_HEX    "6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000"
 #define MAINNET_GENESIS_TX_HASH_HEX "3ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4a"
 
+#define NAMECOIN_MAGIC_BYTES "f9beb4fe"
+
+#define NAMECOIN_TESTNET_MAGIC_BYTES "fabfb5fe"
+
 #define BITMASK(X) (2**X - 1)
 
 #define HASH160PREFIX WRITE_UINT8_LE((uint8_t)SCRIPT_PREFIX_HASH160)
@@ -756,9 +760,19 @@ public:
    /////////////////////////////////////////////////////////////////////////////
    static size_t TxCalcLength(uint8_t const * ptr,
                                 size_t size,
+                                uint32_t nBlk,
                                 vector<size_t> * offsetsIn=NULL,
                                 vector<size_t> * offsetsOut=NULL)
    {
+      /*if(nBlk >= 19200) {
+         // Check for merge mined blocks and increment ptr???
+         // Problem is that nBlk isn't currently the block height.
+         // getBlockHeight() returns uint32_max (because TxRef is null)
+         // We probably need to check the data to see whether the block is
+         // merge mined anyway (because nBlk >= 19200 is not necessarily
+         // merge mined).
+      }*/
+      
       BinaryRefReader brr(ptr, size);  
       
       if (brr.getSizeRemaining() < 4)
@@ -1342,13 +1356,18 @@ public:
 
    // This got more complicated when Bitcoin-Qt 0.8 switched from
    // blk0001.dat to blocks/blk00000.dat
-   static string getBlkFilename(string dir, uint32_t fblkNum)
+   static string getBlkFilename(string chain, string dir, uint32_t fblkNum)
    {
       /// Update:  It's been enough time since the hardfork that just about 
       //           everyone must've upgraded to 0.8+ by now... remove pre-0.8
       //           compatibility.
       char* fname = new char[1024];
-      sprintf(fname, "%s/blk%05d.dat", dir.c_str(), fblkNum);
+      if(chain == "Namecoin") {
+         sprintf(fname, "%s/blk%04d.dat", dir.c_str(), fblkNum+1);
+      }
+      else {
+         sprintf(fname, "%s/blk%05d.dat", dir.c_str(), fblkNum);
+      }
       string strName(fname);
       delete[] fname;
       return strName;

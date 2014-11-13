@@ -558,7 +558,8 @@ void TxOut::pprint(ostream & os, int nIndent, bool pBigendian)
 /////////////////////////////////////////////////////////////////////////////
 void Tx::unserialize(uint8_t const * ptr, size_t size)
 {
-   uint32_t nBytes = BtcUtils::TxCalcLength(ptr, size, &offsetsTxIn_, &offsetsTxOut_);
+   uint32_t nBytes = BtcUtils::TxCalcLength(ptr, size, getBlockHeight(), &offsetsTxIn_,
+          &offsetsTxOut_);
    
    if (nBytes > size)
       throw BlockDeserializingException();

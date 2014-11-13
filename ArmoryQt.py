@@ -101,6 +101,18 @@ class ArmoryMainWindow(QMainWindow):
          self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_green_h56.png'))
          if Colors.isDarkBkgd:
             self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_white_text_green_h56.png'))
+      elif USE_NAMECOIN:
+         self.setWindowTitle('Armory - Namecoin Wallet Management')
+         self.iconfile = ':/armory_icon_32x32.png'
+         self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_h44.png'))
+         if Colors.isDarkBkgd:
+            self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_white_text_h65.png'))
+      elif USE_NAMECOIN_TESTNET:
+         self.setWindowTitle('Armory - Namecoin Wallet Management [TESTNET]')
+         self.iconfile = ':/armory_icon_green_32x32.png'
+         self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_green_h56.png'))
+         if Colors.isDarkBkgd:
+            self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_white_text_green_h56.png'))
       else:
          self.setWindowTitle('Armory - Bitcoin Wallet Management')
          self.iconfile = ':/armory_icon_32x32.png'
@@ -115,7 +127,7 @@ class ArmoryMainWindow(QMainWindow):
          self.setWindowIcon(QIcon(self.iconfile))
       else:
          self.notifCtr = ArmoryMac.MacNotificationHandler.None
-         if USE_TESTNET:
+         if USE_TESTNET or USE_NAMECOIN_TESTNET:
             self.iconfile = ':/armory_icon_green_fullres.png'
             ArmoryMac.MacDockIconHandler.instance().setMainWindow(self)
             ArmoryMac.MacDockIconHandler.instance().setIcon(QIcon(self.iconfile))
@@ -526,7 +538,7 @@ class ArmoryMainWindow(QMainWindow):
       self.mainDisplayTabs.addTab(self.tabAnnounce,  'Announcements')
 
       ##########################################################################
-      if USE_TESTNET and not CLI_OPTIONS.disableModules:
+      if (USE_TESTNET or USE_NAMECOIN_TESTNET) and not CLI_OPTIONS.disableModules:
          self.loadArmoryModules()   
       ##########################################################################
 
@@ -949,7 +961,7 @@ class ArmoryMainWindow(QMainWindow):
                LOGWARN('Sig on "%s" is valid: %s' % (moduleName, str(isSignedByATI)))
                
    
-            if not isSignedByATI and not USE_TESTNET:
+            if not isSignedByATI and not (USE_TESTNET or USE_NAMECOIN_TESTNET):
                reply = QMessageBox.warning(self, tr("UNSIGNED Module"), tr("""
                   Armory detected the following module which is 
                   <font color="%s"><b>unsigned</b></font> and may be dangerous:
@@ -1311,7 +1323,7 @@ class ArmoryMainWindow(QMainWindow):
       self.sysTray = QSystemTrayIcon(self)
       self.sysTray.setIcon( QIcon(self.iconfile) )
       self.sysTray.setVisible(True)
-      self.sysTray.setToolTip('Armory' + (' [Testnet]' if USE_TESTNET else ''))
+      self.sysTray.setToolTip('Armory' + (' [Testnet]' if USE_TESTNET or USE_NAMECOIN_TESTNET else ''))
       self.connect(self.sysTray, SIGNAL('messageClicked()'), self.bringArmoryToFront)
       self.connect(self.sysTray, SIGNAL('activated(QSystemTrayIcon::ActivationReason)'), \
                    self.sysTrayActivated)
@@ -1411,7 +1423,7 @@ class ArmoryMainWindow(QMainWindow):
       """
       LOGINFO('setupUriRegistration')
 
-      if USE_TESTNET:
+      if USE_TESTNET or USE_NAMECOIN or USE_NAMECOIN_TESTNET:
          return
 
       if OS_LINUX:
@@ -5091,8 +5103,12 @@ class ArmoryMainWindow(QMainWindow):
             lastBlkTime = info['toptime']
 
          # Use a reference point if we are starting from scratch
-         refBlock = max(290746,      lastBlkNum)
-         refTime  = max(1394922889,  lastBlkTime)
+         if COIN == 'Namecoin':
+            refBlock = max(204428,      lastBlkNum)
+            refTime  = max(1415390883,  lastBlkTime)
+         else:
+            refBlock = max(290746,      lastBlkNum)
+            refTime  = max(1394922889,  lastBlkTime)
 
 
          # Ten min/block is pretty accurate, even from genesis (about 1% slow)
@@ -6904,7 +6920,7 @@ def checkForAlreadyOpenError():
          armoryExists.append(proc.pid)
       if bexe in proc.name:
          LOGINFO('Found bitcoind PID: %d', proc.pid)
-         if ('testnet' in proc.name) == USE_TESTNET:
+         if ('testnet' in proc.name) == USE_TESTNET or USE_NAMECOIN_TESTNET:
             bitcoindExists.append(proc.pid)
 
    if len(armoryExists)>0:
@@ -6931,7 +6947,7 @@ if 1:
       checkForAlreadyOpen()
 
    pixLogo = QPixmap(':/splashlogo.png')
-   if USE_TESTNET:
+   if USE_TESTNET or USE_NAMECOIN_TESTNET:
       pixLogo = QPixmap(':/splashlogo_testnet.png')
    SPLASH = QSplashScreen(pixLogo)
    SPLASH.setMask(pixLogo.mask())

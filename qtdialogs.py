@@ -7352,7 +7352,7 @@ class DlgPrintBackup(ArmoryDialog):
 
       doMask = self.chkSecurePrint.isChecked()
 
-      if USE_TESTNET:
+      if USE_TESTNET or USE_NAMECOIN_TESTNET:
          self.scene.drawPixmapFile(':/armory_logo_green_h56.png')
       else:
          self.scene.drawPixmapFile(':/armory_logo_h36.png')

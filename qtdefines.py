@@ -746,6 +746,12 @@ class ArmoryDialog(QDialog):
       if USE_TESTNET:
          self.setWindowTitle('Armory - Bitcoin Wallet Management [TESTNET]')
          self.setWindowIcon(QIcon(':/armory_icon_green_32x32.png'))
+      elif USE_NAMECOIN:
+         self.setWindowTitle('Armory - Namecoin Wallet Management')
+         self.setWindowIcon(QIcon(':/armory_icon_32x32.png'))
+      elif USE_NAMECOIN_TESTNET:
+         self.setWindowTitle('Armory - Namecoin Wallet Management [TESTNET]')
+         self.setWindowIcon(QIcon(':/armory_icon_green_32x32.png'))
       else:
          self.setWindowTitle('Armory - Bitcoin Wallet Management')
          self.setWindowIcon(QIcon(':/armory_icon_32x32.png'))

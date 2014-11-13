@@ -8,7 +8,7 @@
 
 from PyQt4.Qt import * #@UnusedWildImport
 from PyQt4.QtGui import * #@UnusedWildImport
-from armoryengine.ArmoryUtils import USE_TESTNET
+from armoryengine.ArmoryUtils import USE_TESTNET, USE_NAMECOIN, USE_NAMECOIN_TESTNET
 from ui.WalletFrames import NewWalletFrame, SetPassphraseFrame, VerifyPassphraseFrame,\
    WalletBackupFrame, WizardCreateWatchingOnlyWalletFrame
 from ui.TxFrames import SendBitcoinsFrame, SignBroadcastOfflineTxFrame,\
@@ -34,6 +34,12 @@ class ArmoryWizard(QWizard):
       self.connect(self, SIGNAL('currentIdChanged(int)'), self.fitContents)
       if USE_TESTNET:
          self.setWindowTitle('Armory - Bitcoin Wallet Management [TESTNET]')
+         self.setWindowIcon(QIcon(':/armory_icon_green_32x32.png'))
+      elif USE_NAMECOIN:
+         self.setWindowTitle('Armory - Namecoin Wallet Management')
+         self.setWindowIcon(QIcon(':/armory_icon_32x32.png'))
+      elif USE_NAMECOIN_TESTNET:
+         self.setWindowTitle('Armory - Namecoin Wallet Management [TESTNET]')
          self.setWindowIcon(QIcon(':/armory_icon_green_32x32.png'))
       else:
          self.setWindowTitle('Armory - Bitcoin Wallet Management')
