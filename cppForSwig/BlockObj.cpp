@@ -178,6 +178,67 @@ uint32_t BlockHeader::findNonce(const char* inDiffStr)
 /////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////
 //
+// MergeMiningData methods
+//
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+void MergeMiningData::unserialize(BinaryRefReader & brr)
+{
+   /*
+    * Coinbase tx
+    * standard tx type
+    * for some reason creating a tx instance didn't work
+    */
+   // txversion
+   brr.advance(4);
+
+   uint32_t txInCount = brr.get_var_int();
+   for(int i=0; i < txInCount; i++) {
+      TxIn txin;
+      txin.unserialize(brr);
+   }
+
+   uint32_t txOutCount = brr.get_var_int();
+   for(int i=0; i < txOutCount; i++) {
+      TxOut txout;
+      txout.unserialize(brr);
+   }
+
+   //locktime
+   brr.advance(4);
+
+   /*
+    * Block hash
+    * hash of the parent block header
+    *
+    */
+   brr.advance(32);
+
+   /*
+    * Coinbase and blockchain branches
+    * merkle branches
+    *
+    */
+   for(int i=0; i < 2; i++) {
+      uint32_t branchLen = brr.get_var_int();
+      brr.advance(32 * branchLen);
+      brr.advance(4);
+   }
+
+   /*
+    * Parent block
+    * block header
+    *
+    */
+   brr.advance(80);
+}
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
+//
 // OutPoint methods
 //
 /////////////////////////////////////////////////////////////////////////////

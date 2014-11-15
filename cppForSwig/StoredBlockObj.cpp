@@ -243,7 +243,13 @@ void StoredHeader::unserializeFullBlock(BinaryRefReader brr,
    }
 
    vector<BinaryData> allTxHashes;
-   BlockHeader bh(brr); 
+   BlockHeader bh(brr);
+   
+   if((bh.getVersion() & 0x100) == 0x100) {
+      MergeMiningData mmd;
+      mmd.unserialize(brr);
+   }
+
    uint32_t nTx = (uint32_t)brr.get_var_int();
 
    createFromBlockHeader(bh);
