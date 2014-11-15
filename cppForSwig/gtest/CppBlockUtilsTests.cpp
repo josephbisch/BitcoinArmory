@@ -6825,17 +6825,17 @@ TEST_F(BlockUtilsBare, Load5Blocks)
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
 
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
    EXPECT_EQ(wlt->getFullBalance(), 240*COIN);
-   EXPECT_EQ(wltLB1->getFullBalance(), 25*COIN);
-   EXPECT_EQ(wltLB2->getFullBalance(), 35*COIN);
+   EXPECT_EQ(wltLB1->getFullBalance(), 30*COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 30*COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6907,11 +6907,11 @@ TEST_F(BlockUtilsBare, Load4Blocks_Plus2)
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
    EXPECT_EQ(scrObj->getFullBalance(), 10*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 10*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(),  0*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 15*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 10*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 15*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
 
    // Load the remaining blocks.
    setBlocks({ "0", "1", "2", "3", "4", "5" }, blk0dat_);
@@ -6935,17 +6935,17 @@ TEST_F(BlockUtilsBare, Load4Blocks_Plus2)
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
 
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(BlockUtilsBare, DISABLED_Load4Blocks_ReloadBDM_ZC_Plus1)
+TEST_F(BlockUtilsBare, Load4Blocks_ReloadBDM_ZC_Plus2)
 {
    vector<BinaryData> scrAddrVec;
    scrAddrVec.push_back(TestChain::scrAddrA);
@@ -6985,6 +6985,18 @@ TEST_F(BlockUtilsBare, DISABLED_Load4Blocks_ReloadBDM_ZC_Plus1)
    EXPECT_EQ(spendableBalance, 65*COIN);
    EXPECT_EQ(unconfirmedBalance, 165*COIN);
 
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 10 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 10 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
+
+   EXPECT_EQ(wltLB1->getFullBalance(), 10 * COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 15 * COIN);
+
    //restart bdm
    theBDV->unregisterWallet("wallet1");
    delete theBDM;
@@ -6997,6 +7009,9 @@ TEST_F(BlockUtilsBare, DISABLED_Load4Blocks_ReloadBDM_ZC_Plus1)
 
    wlt = theBDV->registerWallet(scrAddrVec, "wallet1", false);
    wlt->addScrAddress(TestChain::scrAddrE);
+
+   regLockboxes(theBDV, &wltLB1, &wltLB2);
+
 
    TheBDM.doInitialSyncOnLoad(nullProgress);
    theBDV->enableZeroConf();
@@ -7016,14 +7031,32 @@ TEST_F(BlockUtilsBare, DISABLED_Load4Blocks_ReloadBDM_ZC_Plus1)
    EXPECT_EQ(spendableBalance, 65 * COIN);
    EXPECT_EQ(unconfirmedBalance, 165 * COIN);
 
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 10 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 10 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
+
+   EXPECT_EQ(wltLB1->getFullBalance(), 10 * COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 15 * COIN);
+
+
    //add ZC
    BinaryData rawZC(258);
-   // THIS TX does not connect to our chain
    FILE *ff = fopen("../reorgTest/ZCtx.tx", "rb");
    fread(rawZC.getPtr(), 258, 1, ff);
    fclose(ff);
 
+   BinaryData rawLBZC(378);
+   FILE *flb = fopen("../reorgTest/LBZC.tx", "rb");
+   fread(rawLBZC.getPtr(), 378, 1, flb);
+   fclose(flb);
+
    theBDV->addNewZeroConfTx(rawZC, 0, false);
+   theBDV->addNewZeroConfTx(rawLBZC, 0, false);
    theBDV->parseNewZeroConfTx();
    theBDV->scanWallets();
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA);
@@ -7040,6 +7073,19 @@ TEST_F(BlockUtilsBare, DISABLED_Load4Blocks_ReloadBDM_ZC_Plus1)
    EXPECT_EQ(spendableBalance, 35*COIN);
    EXPECT_EQ(unconfirmedBalance, 135*COIN);
 
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 10 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
+
+   EXPECT_EQ(wltLB1->getFullBalance(), 5 * COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 15 * COIN);
+
+   //
    setBlocks({ "0", "1", "2", "3", "4", "5" }, blk0dat_);
    TheBDM.readBlkFileUpdate();
    theBDV->scanWallets();
@@ -7061,10 +7107,22 @@ TEST_F(BlockUtilsBare, DISABLED_Load4Blocks_ReloadBDM_ZC_Plus1)
    EXPECT_EQ(fullBalance, 170*COIN);
    EXPECT_EQ(spendableBalance, 70*COIN);
    EXPECT_EQ(unconfirmedBalance, 170*COIN);
+
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 25 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 30 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
+
+   EXPECT_EQ(wltLB1->getFullBalance(), 30 * COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 30 * COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(BlockUtilsBare, DISABLED_Load3locks_ZC_Plus2_TestLedgers)
+TEST_F(BlockUtilsBare, Load3locks_ZC_Plus3_TestLedgers)
 {
    vector<BinaryData> scrAddrVec;
    scrAddrVec.push_back(TestChain::scrAddrA);
@@ -7108,12 +7166,11 @@ TEST_F(BlockUtilsBare, DISABLED_Load3locks_ZC_Plus2_TestLedgers)
 
    //add ZC
    BinaryData rawZC(258);
-   // THIS FILE IS BAD
    FILE *ff = fopen("../reorgTest/ZCtx.tx", "rb");
    fread(rawZC.getPtr(), 258, 1, ff);
    fclose(ff);
 
-   BinaryData ZChash = READHEX("d417243bb2794a5d4f114e949d6e54a52d52056c405f6a00232b9d9213635a12");
+   BinaryData ZChash = READHEX("b6b6f145742a9072fd85f96772e63a00eb4101709aa34ec5dd59e8fc904191a7");
 
    theBDV->addNewZeroConfTx(rawZC, 1300000000, false);
    theBDV->parseNewZeroConfTx();
@@ -7141,7 +7198,7 @@ TEST_F(BlockUtilsBare, DISABLED_Load3locks_ZC_Plus2_TestLedgers)
 
    //pull ZC from DB, verify it's carrying the proper data
    LMDBEnv::Transaction *dbtx = 
-      new LMDBEnv::Transaction(&iface_->dbEnv_, LMDB::ReadWrite);
+      new LMDBEnv::Transaction(&iface_->dbEnv_, LMDB::ReadOnly);
    StoredTx zcStx;
    BinaryData zcKey = WRITE_UINT16_BE(0xFFFF);
    zcKey.append(WRITE_UINT32_LE(0));
@@ -7174,7 +7231,7 @@ TEST_F(BlockUtilsBare, DISABLED_Load3locks_ZC_Plus2_TestLedgers)
    theBDV->scanWallets();
 
    //add 4th block
-   setBlocks({ "0", "1", "2", "4" }, blk0dat_);
+   setBlocks({ "0", "1", "2", "3" }, blk0dat_);
    TheBDM.readBlkFileUpdate();
    theBDV->scanWallets();
 
@@ -7203,11 +7260,9 @@ TEST_F(BlockUtilsBare, DISABLED_Load3locks_ZC_Plus2_TestLedgers)
 
    //The BDM was recycled, but the ZC is still live, and the mempool should 
    //have reloaded it. Pull from DB and verify
-   dbtx = new LMDBEnv::Transaction(&iface_->dbEnv_, LMDB::ReadWrite);
+   dbtx = new LMDBEnv::Transaction(&iface_->dbEnv_, LMDB::ReadOnly);
    StoredTx zcStx2;
 
-   // These aren't right. Need to re-analyze. (Last step causes a crash and is
-   // commented out.)
    EXPECT_EQ(iface_->getStoredZcTx(zcStx2, zcKey), true);
    EXPECT_EQ(zcStx2.thisHash_, ZChash);
    EXPECT_EQ(zcStx2.numBytes_, 258);
@@ -7218,7 +7273,43 @@ TEST_F(BlockUtilsBare, DISABLED_Load3locks_ZC_Plus2_TestLedgers)
    delete dbtx;
 
    //add 5th block
-   setBlocks({ "0", "1", "2", "4", "5" }, blk0dat_);
+   setBlocks({ "0", "1", "2", "3", "4" }, blk0dat_);
+
+   TheBDM.readBlkFileUpdate();
+   theBDV->scanWallets();
+
+   EXPECT_EQ(iface_->getTopBlockHeight(HEADERS), 4);
+   EXPECT_EQ(iface_->getTopBlockHash(HEADERS), TestChain::blkHash4);
+   EXPECT_TRUE(TheBDM.blockchain().getHeaderByHash(TestChain::blkHash4).isMainBranch());
+
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA);
+   EXPECT_EQ(scrObj->getFullBalance(), 50*COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrB);
+   EXPECT_EQ(scrObj->getFullBalance(), 50*COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
+   EXPECT_EQ(scrObj->getFullBalance(), 20*COIN);
+
+   fullBalance = wlt->getFullBalance();
+   spendableBalance = wlt->getSpendableBalance(5);
+   unconfirmedBalance = wlt->getUnconfirmedBalance(5);
+   EXPECT_EQ(fullBalance, 120 * COIN);
+   EXPECT_EQ(spendableBalance, 40 * COIN);
+   EXPECT_EQ(unconfirmedBalance, 120 * COIN);
+
+   dbtx = new LMDBEnv::Transaction(&iface_->dbEnv_, LMDB::ReadOnly);
+   StoredTx zcStx3;
+
+   EXPECT_EQ(iface_->getStoredZcTx(zcStx3, zcKey), true);
+   EXPECT_EQ(zcStx3.thisHash_, ZChash);
+   EXPECT_EQ(zcStx3.numBytes_, 258);
+   EXPECT_EQ(zcStx3.fragBytes_, 190);
+   EXPECT_EQ(zcStx3.numTxOut_, 2);
+   EXPECT_EQ(zcStx3.stxoMap_.begin()->second.getValue(), 10 * COIN);
+
+   delete dbtx;
+
+   //add 6th block
+   setBlocks({ "0", "1", "2", "3", "4", "5" }, blk0dat_);
 
    TheBDM.readBlkFileUpdate();
    theBDV->scanWallets();
@@ -7228,11 +7319,11 @@ TEST_F(BlockUtilsBare, DISABLED_Load3locks_ZC_Plus2_TestLedgers)
    EXPECT_TRUE(TheBDM.blockchain().getHeaderByHash(TestChain::blkHash5).isMainBranch());
 
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA);
-   EXPECT_EQ(scrObj->getFullBalance(), 50*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 50 * COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrB);
-   EXPECT_EQ(scrObj->getFullBalance(), 70*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 70 * COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
-   EXPECT_EQ(scrObj->getFullBalance(), 20*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 20 * COIN);
 
    fullBalance = wlt->getFullBalance();
    spendableBalance = wlt->getSpendableBalance(5);
@@ -7241,17 +7332,16 @@ TEST_F(BlockUtilsBare, DISABLED_Load3locks_ZC_Plus2_TestLedgers)
    EXPECT_EQ(spendableBalance, 40 * COIN);
    EXPECT_EQ(unconfirmedBalance, 140 * COIN);
 
-   // These aren't right. Need to re-analyze.
    le = wlt->getLedgerEntryForTx(ZChash);
-   EXPECT_EQ(le.getTxTime(), 1231009505);
-   EXPECT_EQ(le.getValue(),  3000000000);
+   EXPECT_EQ(le.getTxTime(), 1231009513);
+   EXPECT_EQ(le.getValue(), 3000000000);
    EXPECT_EQ(le.getBlockNum(), 5);
 
    //Tx is now in a block, ZC should be gone from DB
    dbtx = new LMDBEnv::Transaction(&iface_->dbEnv_, LMDB::ReadWrite);
-   StoredTx zcStx3;
+   StoredTx zcStx4;
 
-   EXPECT_EQ(iface_->getStoredZcTx(zcStx3, zcKey), false);
+   EXPECT_EQ(iface_->getStoredZcTx(zcStx4, zcKey), false);
 
    delete dbtx;
 }
@@ -7280,10 +7370,10 @@ TEST_F(BlockUtilsBare, Load5Blocks_FullReorg)
 
    TheBDM.doInitialSyncOnLoad(nullProgress);
 
-   setBlocks({ "0", "1", "2", "3", "4A" }, blk0dat_);
+   setBlocks({ "0", "1", "2", "3", "4", "5", "4A" }, blk0dat_);
    TheBDM.readBlkFileUpdate();
 
-   setBlocks({ "0", "1", "2", "3", "4A", "5A" }, blk0dat_);
+   setBlocks({ "0", "1", "2", "3", "4", "5", "4A", "5A" }, blk0dat_);
 
    uint32_t prevBlock = TheBDM.readBlkFileUpdate();
 
@@ -7293,35 +7383,35 @@ TEST_F(BlockUtilsBare, Load5Blocks_FullReorg)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA);
    EXPECT_EQ(scrObj->getFullBalance(), 50*COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrB);
-   EXPECT_EQ(scrObj->getFullBalance(), 70*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
-   EXPECT_EQ(scrObj->getFullBalance(), 20*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 55*COIN);
 
    scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrD);
-   EXPECT_EQ(scrObj->getFullBalance(),65*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(),60*COIN);
    scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrE);
    EXPECT_EQ(scrObj->getFullBalance(),30*COIN);
    scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrF);
-   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(),60*COIN);
 
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 10*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
-   EXPECT_EQ(wlt->getFullBalance(), 140*COIN);
-   EXPECT_EQ(wlt2->getFullBalance(), 100*COIN);
-   EXPECT_EQ(wltLB1->getFullBalance(), 25*COIN);
-   EXPECT_EQ(wltLB2->getFullBalance(), 35*COIN);
+   EXPECT_EQ(wlt->getFullBalance(), 135*COIN);
+   EXPECT_EQ(wlt2->getFullBalance(), 150*COIN);
+   EXPECT_EQ(wltLB1->getFullBalance(), 5*COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 10*COIN);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-TEST_F(BlockUtilsBare, DISABLED_Load5Blocks_DoubleReorg)
+TEST_F(BlockUtilsBare, Load5Blocks_DoubleReorg)
 {
    BtcWallet* wlt;
    BtcWallet* wlt2;
@@ -7336,52 +7426,177 @@ TEST_F(BlockUtilsBare, DISABLED_Load5Blocks_DoubleReorg)
 
    scrAddrVec.clear();
    scrAddrVec.push_back(TestChain::scrAddrD);
+   scrAddrVec.push_back(TestChain::scrAddrE);
+   scrAddrVec.push_back(TestChain::scrAddrF);
    regWallet(scrAddrVec, "wallet2", theBDV, &wlt2);
    regLockboxes(theBDV, &wltLB1, &wltLB2);
 
-   // this file doesn't exist, rewrite it in terms of createTestChain.py
-   BtcUtils::copyFile("../reorgTest/blk_doubleReorg.dat", blk0dat_, 1596);
+   setBlocks({ "0", "1", "2", "3", "4A"}, blk0dat_);
    TheBDM.doInitialSyncOnLoad(nullProgress);
    theBDV->scanWallets();
 
-   //first reorg: add blocks 3 and 4
-   BtcUtils::copyFile("../reorgTest/blk_doubleReorg.dat", blk0dat_, 2645);
+   //first reorg: up to 5
+   setBlocks({ "0", "1", "2", "3", "4A", "4", "5" }, blk0dat_);
    uint32_t prevBlock = TheBDM.readBlkFileUpdate();
    theBDV->scanWallets(prevBlock);
 
    const ScrAddrObj* scrObj;
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA);
-   EXPECT_EQ(scrObj->getFullBalance(), 100*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 50 * COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrB);
-   EXPECT_EQ(scrObj->getFullBalance(),   0*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 70 * COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
-   EXPECT_EQ(scrObj->getFullBalance(),  50*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 20 * COIN);
+   
+   scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrD);
+   EXPECT_EQ(scrObj->getFullBalance(), 65 * COIN);
+   scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrE);
+   EXPECT_EQ(scrObj->getFullBalance(), 30 * COIN);
+   scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrF);
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
 
-   EXPECT_EQ(wlt->getFullBalance(), 150 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 25 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 30 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
 
-   //second reorg: add block 4A and 5A
-   BtcUtils::copyFile("../reorgTest/blk_doubleReorg.dat", blk0dat_);
+   EXPECT_EQ(wlt->getFullBalance(), 140 * COIN);
+   EXPECT_EQ(wlt2->getFullBalance(), 100 * COIN);
+   EXPECT_EQ(wltLB1->getFullBalance(), 30 * COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 30 * COIN);
+
+   //second reorg: up to 5A
+   setBlocks({ "0", "1", "2", "3", "4A", "4", "5", "5A" }, blk0dat_);
    prevBlock = TheBDM.readBlkFileUpdate();
-
    theBDV->scanWallets(prevBlock);
 
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA);
-   EXPECT_EQ(scrObj->getFullBalance(), 150*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 50 * COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrB);
-   EXPECT_EQ(scrObj->getFullBalance(),  10*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30 * COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
-   EXPECT_EQ(scrObj->getFullBalance(),   0*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 55 * COIN);
 
    scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrD);
-   EXPECT_EQ(scrObj->getFullBalance(), 140 * COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 60 * COIN);
+   scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrE);
+   EXPECT_EQ(scrObj->getFullBalance(), 30 * COIN);
+   scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrF);
+   EXPECT_EQ(scrObj->getFullBalance(), 60 * COIN);
 
-   EXPECT_EQ(wlt->getFullBalance(), 160 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
+   EXPECT_EQ(scrObj->getFullBalance(), 10 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
+
+   EXPECT_EQ(wlt->getFullBalance(), 135 * COIN);
+   EXPECT_EQ(wlt2->getFullBalance(), 150 * COIN);
+   EXPECT_EQ(wltLB1->getFullBalance(), 5 * COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 10 * COIN);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(BlockUtilsBare, Load5Blocks_ReloadBDM_Reorg)
 {
+   BtcWallet* wlt;
+   BtcWallet* wlt2;
+   BtcWallet* wltLB1;
+   BtcWallet* wltLB2;
+
+   vector<BinaryData> scrAddrVec;
+   scrAddrVec.push_back(TestChain::scrAddrA);
+   scrAddrVec.push_back(TestChain::scrAddrB);
+   scrAddrVec.push_back(TestChain::scrAddrC);
+   regWallet(scrAddrVec, "wallet1", theBDV, &wlt);
+
+   scrAddrVec.clear();
+   scrAddrVec.push_back(TestChain::scrAddrD);
+   scrAddrVec.push_back(TestChain::scrAddrE);
+   scrAddrVec.push_back(TestChain::scrAddrF);
+   regWallet(scrAddrVec, "wallet2", theBDV, &wlt2);
+   regLockboxes(theBDV, &wltLB1, &wltLB2);
+
+   TheBDM.doInitialSyncOnLoad(nullProgress);
+
+   //reload BDM
+   delete theBDV;
+   delete theBDM;
+
+   //add the reorg blocks
+   setBlocks({ "0", "1", "2", "3", "4", "5", "4A", "5A" }, blk0dat_);
+
+   theBDM = new BlockDataManager_LevelDB(config);
+   theBDM->openDatabase();
+   iface_ = theBDM->getIFace();
+   theBDV = new BlockDataViewer(theBDM);
+
+   scrAddrVec.clear();
+   scrAddrVec.push_back(TestChain::scrAddrA);
+   scrAddrVec.push_back(TestChain::scrAddrB);
+   scrAddrVec.push_back(TestChain::scrAddrC);
+   regWallet(scrAddrVec, "wallet1", theBDV, &wlt);
+
+   scrAddrVec.clear();
+   scrAddrVec.push_back(TestChain::scrAddrD);
+   scrAddrVec.push_back(TestChain::scrAddrE);
+   scrAddrVec.push_back(TestChain::scrAddrF);
+   regWallet(scrAddrVec, "wallet2", theBDV, &wlt2);
+   regLockboxes(theBDV, &wltLB1, &wltLB2);
+
+   TheBDM.doInitialSyncOnLoad(nullProgress);
+   theBDV->scanWallets();
+
+   EXPECT_EQ(TheBDM.blockchain().top().getBlockHeight(), 5);
+
+   const ScrAddrObj* scrObj;
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA); //unspent 50
+   EXPECT_EQ(scrObj->getFullBalance(), 50 * COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrB); //spent 50, spent 50, spent 25, spent 5, unspent 30
+   EXPECT_EQ(scrObj->getFullBalance(), 30 * COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC); //unspent 50, unspent 5
+   EXPECT_EQ(scrObj->getFullBalance(), 55 * COIN);
+
+   scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrD); //unspent 5, unspent 50, unspent 5
+   EXPECT_EQ(scrObj->getFullBalance(), 60 * COIN);
+   scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrE); //unspent 5, unspent 25
+   EXPECT_EQ(scrObj->getFullBalance(), 30 * COIN);
+   scrObj = wlt2->getScrAddrObjByKey(TestChain::scrAddrF); //spent 20, spent 15, unspent 5, unspent 50, unspent 5
+   EXPECT_EQ(scrObj->getFullBalance(), 60 * COIN);
+
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr); //spent 10, unspent 5
+   EXPECT_EQ(scrObj->getFullBalance(), 5 * COIN);
+   scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH); //spent 15
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr); //spent 10, unspent 10
+   EXPECT_EQ(scrObj->getFullBalance(), 10 * COIN);
+   scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH); //spent 5
+   EXPECT_EQ(scrObj->getFullBalance(), 0 * COIN);
+
+   EXPECT_EQ(wlt->getFullBalance(), 135 * COIN);
+   EXPECT_EQ(wlt2->getFullBalance(), 150 * COIN);
+   EXPECT_EQ(wltLB1->getFullBalance(), 5 * COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 10 * COIN);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+TEST_F(BlockUtilsBare, Load5Blocks_ReloadBDM_Reorg_DontTrigger)
+{
+   /***
+   By registering extra addresses after reseting the BDM, this test covers an
+   edge case where the set of registered scrAddr is extended with unscanned
+   scrAddr, so the reorg cannot be performed on the entire set and will be 
+   bypassed instead.
+   ***/
+
    BtcWallet* wlt;
    BtcWallet* wlt2;
    BtcWallet* wltLB1;
@@ -7405,7 +7620,7 @@ TEST_F(BlockUtilsBare, Load5Blocks_ReloadBDM_Reorg)
    delete theBDM;
 
    //add the reorg blocks
-   setBlocks({ "0", "1", "2", "3", "4A", "5A" }, blk0dat_);
+   setBlocks({ "0", "1", "2", "3", "4", "5", "4A", "5A" }, blk0dat_);
 
    theBDM = new BlockDataManager_LevelDB(config);
    theBDM->openDatabase();
@@ -7423,6 +7638,7 @@ TEST_F(BlockUtilsBare, Load5Blocks_ReloadBDM_Reorg)
    scrAddrVec.push_back(TestChain::scrAddrE);
    scrAddrVec.push_back(TestChain::scrAddrF);
    regWallet(scrAddrVec, "wallet2", theBDV, &wlt2);
+   regLockboxes(theBDV, &wltLB1, &wltLB2);
 
    TheBDM.doInitialSyncOnLoad(nullProgress);
    theBDV->scanWallets();
@@ -7433,7 +7649,7 @@ TEST_F(BlockUtilsBare, Load5Blocks_ReloadBDM_Reorg)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA);
    EXPECT_EQ(scrObj->getFullBalance(), 50*COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrB);
-   EXPECT_EQ(scrObj->getFullBalance(), 60*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
    EXPECT_EQ(scrObj->getFullBalance(), 55*COIN);
 
@@ -7445,18 +7661,18 @@ TEST_F(BlockUtilsBare, Load5Blocks_ReloadBDM_Reorg)
    EXPECT_EQ(scrObj->getFullBalance(), 60 * COIN);
 
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(),  0*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 10*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(),  0*COIN);
 
-   EXPECT_EQ(wlt->getFullBalance(), 165*COIN);
-   EXPECT_EQ(wlt2->getFullBalance(), 150*COIN);
-   EXPECT_EQ(wltLB1->getFullBalance(), 140*COIN);
-   EXPECT_EQ(wltLB2->getFullBalance(), 140*COIN);
+   EXPECT_EQ(wlt->getFullBalance(),   135*COIN);
+   EXPECT_EQ(wlt2->getFullBalance(),  150*COIN);
+   EXPECT_EQ(wltLB1->getFullBalance(), 5*COIN);
+   EXPECT_EQ(wltLB2->getFullBalance(), 10*COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7537,13 +7753,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_RescanOps)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
    // Rebuild on-the-fly
    TheBDM.doRebuildDatabases(nullProgress);
@@ -7561,13 +7777,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_RescanOps)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
    // Rebuild on-the-fly
    // used to be doFullRescanRegardlessOfSync, but this is a synonym
@@ -7586,13 +7802,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_RescanOps)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
    TheBDM.doInitialSyncOnLoad(nullProgress);
 
@@ -7609,13 +7825,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_RescanOps)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7651,13 +7867,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_RescanEmptyDB)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7696,13 +7912,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_RebuildEmptyDB)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7743,13 +7959,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_ForceFullRewhatever)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrD);
    EXPECT_EQ(scrObj,  nullptr);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
    ///////////////////////////////////////////
    theBDV->reset();
@@ -7764,13 +7980,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_ForceFullRewhatever)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
    EXPECT_EQ(scrObj->getFullBalance(), 20*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
    ///////////////////////////////////////////
    theBDV->reset();
@@ -7785,13 +8001,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_ForceFullRewhatever)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
    EXPECT_EQ(scrObj->getFullBalance(), 20*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7837,13 +8053,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_ScanWhatIsNeeded)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrD);
    EXPECT_EQ(scrObj, nullptr);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
    ///////////////////////////////////////////
    theBDV->reset();
@@ -7862,13 +8078,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_ScanWhatIsNeeded)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 
    ///////////////////////////////////////////
    theBDV->reset();
@@ -7887,13 +8103,13 @@ TEST_F(BlockUtilsBare, Load5Blocks_ScanWhatIsNeeded)
    scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
    EXPECT_EQ(scrObj->getFullBalance(),  5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
    scrObj = wltLB1->getScrAddrObjByKey(TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(scrObj->getFullBalance(), 25*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddr);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
    scrObj = wltLB2->getScrAddrObjByKey(TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(scrObj->getFullBalance(), 35*COIN);
+   EXPECT_EQ(scrObj->getFullBalance(), 0*COIN);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8458,7 +8674,7 @@ TEST_F(BlockUtilsSuper, Load5Blocks)
 
    iface_->getStoredScriptHistory(ssh, TestChain::scrAddrB);
    EXPECT_EQ(ssh.getScriptBalance(),   70*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 205*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(), 230*COIN);
    EXPECT_EQ(ssh.totalTxioCount_,      13);
 
    iface_->getStoredScriptHistory(ssh, TestChain::scrAddrC);
@@ -8478,28 +8694,28 @@ TEST_F(BlockUtilsSuper, Load5Blocks)
 
    iface_->getStoredScriptHistory(ssh, TestChain::scrAddrF);
    EXPECT_EQ(ssh.getScriptBalance(),   5*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 30*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(), 45*COIN);
    EXPECT_EQ(ssh.totalTxioCount_,      6);
 
    iface_->getStoredScriptHistory(ssh, TestChain::lb1ScrAddr);
-   EXPECT_EQ(ssh.getScriptBalance(),  25*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 35*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.getScriptBalance(),   5*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(), 15*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      3);
 
    iface_->getStoredScriptHistory(ssh, TestChain::lb1ScrAddrP2SH);
    EXPECT_EQ(ssh.getScriptBalance(),  25*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 35*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.getScriptReceived(), 40*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      3);
 
    iface_->getStoredScriptHistory(ssh, TestChain::lb2ScrAddr);
-   EXPECT_EQ(ssh.getScriptBalance(),  35*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 45*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.getScriptBalance(),  30*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(), 40*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      4);
 
    iface_->getStoredScriptHistory(ssh, TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(ssh.getScriptBalance(),  35*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 45*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.getScriptBalance(),   0*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(),  5*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      2);
 }
 
 
@@ -8548,8 +8764,6 @@ TEST_F(BlockUtilsSuper, Load5Blocks_Plus2NoReorg)
 ////////////////////////////////////////////////////////////////////////////////
 TEST_F(BlockUtilsSuper, Load5Blocks_FullReorg)
 {
-//    DBUtils::setArmoryDbType(ARMORY_DB_SUPER);
-//    DBUtils::setDbPruneType(DB_PRUNE_NONE);
    TheBDM.doInitialSyncOnLoad(nullProgress);
 
    setBlocks({ "0", "1", "2", "3", "4", "5", "4A" }, blk0dat_);
@@ -8565,49 +8779,49 @@ TEST_F(BlockUtilsSuper, Load5Blocks_FullReorg)
    EXPECT_EQ(ssh.totalTxioCount_,      1);
 
    iface_->getStoredScriptHistory(ssh, TestChain::scrAddrB);
-   EXPECT_EQ(ssh.getScriptBalance(),   70*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 205*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      13);
+   EXPECT_EQ(ssh.getScriptBalance(),   30*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(), 160*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      10);
 
    iface_->getStoredScriptHistory(ssh, TestChain::scrAddrC);
-   EXPECT_EQ(ssh.getScriptBalance(),   20*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(),  75*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,       8);
+   EXPECT_EQ(ssh.getScriptBalance(),   55*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(),  55*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,       4);
 
    iface_->getStoredScriptHistory(ssh, TestChain::scrAddrD);
-   EXPECT_EQ(ssh.getScriptBalance(),  65*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 65*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      7);
+   EXPECT_EQ(ssh.getScriptBalance(),  60*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(), 60*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      5);
 
    iface_->getStoredScriptHistory(ssh, TestChain::scrAddrE);
    EXPECT_EQ(ssh.getScriptBalance(),  30*COIN);
    EXPECT_EQ(ssh.getScriptReceived(), 30*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.totalTxioCount_,      4);
 
    iface_->getStoredScriptHistory(ssh, TestChain::scrAddrF);
-   EXPECT_EQ(ssh.getScriptBalance(),   5*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 30*COIN);
+   EXPECT_EQ(ssh.getScriptBalance(),  60*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(), 95*COIN);
    EXPECT_EQ(ssh.totalTxioCount_,      6);
 
    iface_->getStoredScriptHistory(ssh, TestChain::lb1ScrAddr);
    EXPECT_EQ(ssh.getScriptBalance(),   5*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 35*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.getScriptReceived(), 15*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      3);
 
    iface_->getStoredScriptHistory(ssh, TestChain::lb1ScrAddrP2SH);
-   EXPECT_EQ(ssh.getScriptBalance(),   5*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 35*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.getScriptBalance(),   0*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(), 15*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      2);
 
    iface_->getStoredScriptHistory(ssh, TestChain::lb2ScrAddr);
    EXPECT_EQ(ssh.getScriptBalance(),  10*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 45*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.getScriptReceived(), 20*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      3);
 
    iface_->getStoredScriptHistory(ssh, TestChain::lb2ScrAddrP2SH);
-   EXPECT_EQ(ssh.getScriptBalance(),  10*COIN);
-   EXPECT_EQ(ssh.getScriptReceived(), 45*COIN);
-   EXPECT_EQ(ssh.totalTxioCount_,      5);
+   EXPECT_EQ(ssh.getScriptBalance(),   0*COIN);
+   EXPECT_EQ(ssh.getScriptReceived(),  5*COIN);
+   EXPECT_EQ(ssh.totalTxioCount_,      2);
 }
 
 
@@ -9193,7 +9407,7 @@ TEST_F(BlockUtilsWithWalletTest, ZeroConfUpdate)
    theBDV->enableZeroConf();
    theBDV->scanWallets();
 
-   BinaryData ZChash = READHEX("d417243bb2794a5d4f114e949d6e54a52d52056c405f6a00232b9d9213635a12");
+   BinaryData ZChash = READHEX("b6b6f145742a9072fd85f96772e63a00eb4101709aa34ec5dd59e8fc904191a7");
    BinaryData rawZC(258);
    FILE *ff = fopen("../reorgTest/ZCtx.tx", "rb");
    fread(rawZC.getPtr(), 258, 1, ff);

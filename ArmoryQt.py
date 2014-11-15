@@ -51,8 +51,9 @@ from ui.MultiSigDialogs import DlgSelectMultiSigOption, DlgLockboxManager, \
 from ui.VerifyOfflinePackage import VerifyOfflinePackageDialog
 from ui.Wizards import WalletWizard, TxWizard
 from ui.toolsDialogs import MessageSigningVerificationDialog
-from dynamicImport import FILENAME_KEY, SOURCE_CODE_KEY, \
-   SIG_DATA_KEY, ZIP_EXTENSION, getModuleList, importModule
+from dynamicImport import MODULE_PATH_KEY, ZIP_EXTENSION, getModuleList, importModule,\
+   verifyZipSignature, MODULE_ZIP_STATUS, INNER_ZIP_FILENAME,\
+   MODULE_ZIP_STATUS_KEY
 import tempfile
 
 
@@ -179,7 +180,7 @@ class ArmoryMainWindow(QMainWindow):
       self.armoryVersions = [getVersionString(BTCARMORY_VERSION), '']
       self.NetworkingFactory = None
       self.tempModulesDirName = None
-
+      self.internetStatus = None
 
       # Kick off announcement checking, unless they explicitly disabled it
       # The fetch happens in the background, we check the results periodically
@@ -937,100 +938,86 @@ class ArmoryMainWindow(QMainWindow):
          # check hashes and signatures
          modMap = getModuleList(modulesZipDirPath)
          for moduleName,infoMap in modMap.iteritems():
-            moduleZipPath = os.path.join(modulesZipDirPath, infoMap[FILENAME_KEY])
-            modHash = binary_to_hex(sha256(infoMap[SOURCE_CODE_KEY]))
-   
-            isSignedByATI = False
-            if SIG_DATA_KEY in infoMap:
-               """
-               Signature file contains multiple lines, of the form "key=value\n"
-               The last line is the hex-encoded signature, which is over the 
-               source code + everything in the sig file up to the last line.
-               The key-value lines may contain properties such as signature 
-               validity times/expiration, contact info of author, etc.
-               """
-               sigFile = infoMap[SIG_DATA_KEY]
-               sigLines = [line.strip() for line in sigFile.strip().split('\n')]
-               properties = dict([line.split('=') for line in sigLines[:-1]])
-               msgSigned = infoMap[SOURCE_CODE_KEY] + '\x00' + '\n'.join(sigLines[:1])
-   
-               sbdMsg = SecureBinaryData(sha256(msgSigned))
-               sbdSig = SecureBinaryData(hex_to_binary(sigLines[-1]))
-               sbdPub = SecureBinaryData(hex_to_binary(ARMORY_INFO_SIGN_PUBLICKEY))
-               isSignedByATI = CryptoECDSA().VerifyData(sbdMsg, sbdSig, sbdPub)
-               LOGWARN('Sig on "%s" is valid: %s' % (moduleName, str(isSignedByATI)))
-               
-   
-            if not isSignedByATI and not (USE_TESTNET or USE_NAMECOIN_TESTNET):
-               reply = QMessageBox.warning(self, tr("UNSIGNED Module"), tr("""
+            moduleZipPath = os.path.join(modulesZipDirPath, infoMap[MODULE_PATH_KEY])
+            if  infoMap[MODULE_ZIP_STATUS_KEY] == MODULE_ZIP_STATUS.Invalid:
+               reply = QMessageBox.warning(self, tr("Invalid Module"), tr("""
                   Armory detected the following module which is 
-                  <font color="%s"><b>unsigned</b></font> and may be dangerous:
+                  <font color="%s"><b>invalid</b></font>:
                   <br><br>
                      <b>Module Name:</b>  %s<br>
                      <b>Module Path:</b>  %s<br>
-                     <b>Module Hash:</b>  %s<br>
+                  <br><br>
+                  Armory will only run a module from a zip file that
+                  has the required stucture.""") % \
+                  (htmlColor('TextRed'), moduleName, moduleZipPath), QMessageBox.Ok)
+            elif not USE_TESTNET and infoMap[MODULE_ZIP_STATUS_KEY] == MODULE_ZIP_STATUS.Unsigned:
+               reply = QMessageBox.warning(self, tr("UNSIGNED Module"), tr("""
+                  Armory detected the following module which  
+                  <font color="%s"><b>has not been signed by Armory</b></font> and may be dangerous:
+                  <br><br>
+                     <b>Module Name:</b>  %s<br>
+                     <b>Module Path:</b>  %s<br>
                   <br><br>
                   Armory will not allow you to run this module.""") % \
-                  (moduleName, moduleZipPath, modHash[:16]), QMessageBox.Ok)
-
-            innerZipName = ''.join([moduleName, ZIP_EXTENSION])
-            # TODO - check existence of the inner zip file
-            ZipFile(moduleZipPath).extract(innerZipName, self.tempModulesDirName)
-            ZipFile(os.path.join(self.tempModulesDirName,innerZipName)).extractall(self.tempModulesDirName)
+                  (htmlColor('TextRed'), moduleName, moduleZipPath), QMessageBox.Ok)
+            else:
+   
+               ZipFile(moduleZipPath).extract(INNER_ZIP_FILENAME, self.tempModulesDirName)
+               ZipFile(os.path.join(self.tempModulesDirName,INNER_ZIP_FILENAME)).extractall(self.tempModulesDirName)
+               
+               plugin = importModule(self.tempModulesDirName, moduleName, globals())
+               plugObj = plugin.PluginObject(self)
+      
+               if not hasattr(plugObj,'getTabToDisplay') or \
+                  not hasattr(plugObj,'tabName'):
+                  LOGERROR('Module is malformed!  No tabToDisplay or tabName attrs')
+                  QMessageBox.critmoduleName(self, tr("Bad Module"), tr("""
+                     The module you attempted to load (%s) is malformed.  It is 
+                     missing attributes that are needed for Armory to load it.  
+                     It will be skipped.""") % moduleName, QMessageBox.Ok)
+                  continue
+                     
+               verPluginInt = getVersionInt(readVersionString(plugObj.maxVersion))
+               verArmoryInt = getVersionInt(BTCARMORY_VERSION)
+               if verArmoryInt >verPluginInt:
+                  reply = QMessageBox.warning(self, tr("Outdated Module"), tr("""
+                     Module "%s" is only specified to work up to Armory version %s.
+                     You are using Armory version %s.  Please remove the module if
+                     you experience any problems with it, or contact the maintainer
+                     for a new version.
+                     <br><br>
+                     Do you want to continue loading the module?"""), 
+                     QMessageBox.Yes | QMessageBox.No)
+      
+                  if not reply==QMessageBox.Yes:
+                     continue
+      
+               # All plugins should have "tabToDisplay" and "tabName" attributes
+               LOGWARN('Adding module to tab list: "' + plugObj.tabName + '"')
+               self.mainDisplayTabs.addTab(plugObj.getTabToDisplay(), plugObj.tabName)
+      
+               # Also inject any extra methods that will be 
+               injectFuncList = [ \
+                     ['injectHeartbeatAlwaysFunc', 'extraHeartbeatAlways'], 
+                     ['injectHeartbeatOnlineFunc', 'extraHeartbeatOnline'], 
+                     ['injectGoOnlineFunc',        'extraGoOnlineFunctions'], 
+                     ['injectNewTxFunc',           'extraNewTxFunctions'], 
+                     ['injectNewBlockFunc',        'extraNewBlockFunctions'], 
+                     ['injectShutdownFunc',        'extraShutdownFunctions'] ]
+      
+               # Add any methods
+               for plugFuncName,funcListName in injectFuncList:
+                  if not hasattr(plugObj, plugFuncName):
+                     continue
             
-            plugin = importModule(self.tempModulesDirName, moduleName, globals())
-            plugObj = plugin.PluginObject(self)
-   
-            if not hasattr(plugObj,'getTabToDisplay') or \
-               not hasattr(plugObj,'tabName'):
-               LOGERROR('Module is malformed!  No tabToDisplay or tabName attrs')
-               QMessageBox.critmoduleName(self, tr("Bad Module"), tr("""
-                  The module you attempted to load (%s) is malformed.  It is 
-                  missing attributes that are needed for Armory to load it.  
-                  It will be skipped.""") % moduleName, QMessageBox.Ok)
-               continue
-                  
-            verPluginInt = getVersionInt(readVersionString(plugObj.maxVersion))
-            verArmoryInt = getVersionInt(BTCARMORY_VERSION)
-            if verArmoryInt >verPluginInt:
-               reply = QMessageBox.warning(self, tr("Outdated Module"), tr("""
-                  Module "%s" is only specified to work up to Armory version %s.
-                  You are using Armory version %s.  Please remove the module if
-                  you experience any problems with it, or contact the maintainer
-                  for a new version.
-                  <br><br>
-                  Do you want to continue loading the module?"""), 
-                  QMessageBox.Yes | QMessageBox.No)
-   
-               if not reply==QMessageBox.Yes:
-                  continue
-   
-            # All plugins should have "tabToDisplay" and "tabName" attributes
-            LOGWARN('Adding module to tab list: "' + plugObj.tabName + '"')
-            self.mainDisplayTabs.addTab(plugObj.getTabToDisplay(), plugObj.tabName)
-   
-            # Also inject any extra methods that will be 
-            injectFuncList = [ \
-                  ['injectHeartbeatAlwaysFunc', 'extraHeartbeatAlways'], 
-                  ['injectHeartbeatOnlineFunc', 'extraHeartbeatOnline'], 
-                  ['injectGoOnlineFunc',        'extraGoOnlineFunctions'], 
-                  ['injectNewTxFunc',           'extraNewTxFunctions'], 
-                  ['injectNewBlockFunc',        'extraNewBlockFunctions'], 
-                  ['injectShutdownFunc',        'extraShutdownFunctions'] ]
-   
-            # Add any methods
-            for plugFuncName,funcListName in injectFuncList:
-               if not hasattr(plugObj, plugFuncName):
-                  continue
-         
-               if not hasattr(self, funcListName):
-                  LOGERROR('Missing an ArmoryQt list variable: %s' % funcListName)
-                  continue
-   
-               LOGINFO('Found module function: %s' % plugFuncName)
-               funcList = getattr(self, funcListName)
-               plugFunc = getattr(plugObj, plugFuncName)
-               funcList.append(plugFunc)
+                  if not hasattr(self, funcListName):
+                     LOGERROR('Missing an ArmoryQt list variable: %s' % funcListName)
+                     continue
+      
+                  LOGINFO('Found module function: %s' % plugFuncName)
+                  funcList = getattr(self, funcListName)
+                  plugFunc = getattr(plugObj, plugFuncName)
+                  funcList.append(plugFunc)
                                     
 
    ############################################################################
@@ -2161,7 +2148,6 @@ class ArmoryMainWindow(QMainWindow):
 
    def setupNetworking(self):
       LOGINFO('Setting up networking...')
-      self.internetAvail = False
 
       # Prevent Armory from being opened twice
       from twisted.internet import reactor
@@ -2186,21 +2172,11 @@ class ArmoryMainWindow(QMainWindow):
 
       settingSkipCheck = self.getSettingOrSetDefault('SkipOnlineCheck', False)
       useTor = self.getSettingOrSetDefault('UseTorSettings', False)
-      self.forceOnline = CLI_OPTIONS.forceOnline or settingSkipCheck or useTor
-
       # Check general internet connection
-      self.internetAvail = False
-      if self.forceOnline:
-         LOGINFO('Skipping online check, forcing online mode')
-      else:
-         self.internetAvail = isInternetAvailable()
+      self.internetStatus = isInternetAvailable(forceOnline =
+             CLI_OPTIONS.forceOnline or settingSkipCheck or useTor)
 
-
-      LOGINFO('Internet connection is Available: %s', self.internetAvail)
-
-
-
-
+      LOGINFO('Internet status: %s', self.internetStatus)
 
    #############################################################################
    def manageBitcoindAskTorrent(self):
@@ -2316,7 +2292,7 @@ class ArmoryMainWindow(QMainWindow):
    ############################################################################
    def startBitcoindIfNecessary(self):
       LOGINFO('startBitcoindIfNecessary')
-      if not (self.forceOnline or self.internetAvail) or CLI_OPTIONS.offline:
+      if self.internetStatus == INTERNET_STATUS.Unavailable or CLI_OPTIONS.offline:
          LOGWARN('Not online, will not start bitcoind')
          return False
 
@@ -2379,16 +2355,21 @@ class ArmoryMainWindow(QMainWindow):
       TheBDM.setSatoshiDir(self.satoshiHomePath)
       TheSDM.setSatoshiDir(self.satoshiHomePath)
       TheTDM.setSatoshiDir(self.satoshiHomePath)
-
+      
+      
+   ############################################################################
+   # This version of online mode is possible doesn't check the internet everytime
+   def isOnlineModePossible(self):
+      return self.internetStatus != INTERNET_STATUS.Unavailable and \
+               satoshiIsAvailable() and \
+               os.path.exists(os.path.join(TheBDM.btcdir, 'blocks'))
 
    ############################################################################
    def loadBlockchainIfNecessary(self):
       LOGINFO('loadBlockchainIfNecessary')
       if CLI_OPTIONS.offline:
-         if self.forceOnline:
-            LOGERROR('Cannot mix --force-online and --offline options!  Using offline mode.')
          self.switchNetworkMode(NETWORKMODE.Offline)
-      elif onlineModeIsPossible():
+      elif self.isOnlineModePossible():
          # Track number of times we start loading the blockchain.
          # We will decrement the number when loading finishes
          # We can use this to detect problems with mempool or blkxxxx.dat
@@ -5103,12 +5084,8 @@ class ArmoryMainWindow(QMainWindow):
             lastBlkTime = info['toptime']
 
          # Use a reference point if we are starting from scratch
-         if COIN == 'Namecoin':
-            refBlock = max(204428,      lastBlkNum)
-            refTime  = max(1415390883,  lastBlkTime)
-         else:
-            refBlock = max(290746,      lastBlkNum)
-            refTime  = max(1394922889,  lastBlkTime)
+         refBlock = max(290746,      lastBlkNum)
+         refTime  = max(1394922889,  lastBlkTime)
 
 
          # Ten min/block is pretty accurate, even from genesis (about 1% slow)
@@ -5629,7 +5606,6 @@ class ArmoryMainWindow(QMainWindow):
          setBtnRowVisible(DASHBTNS.Settings, False)
          setBtnRowVisible(DASHBTNS.Close, False)
          setOnlyDashModeVisible()
-         self.btnModeSwitch.setVisible(False)
 
       # This keeps popping up for some reason!
       self.lblTorrentStats.setVisible(False)
@@ -5651,7 +5627,7 @@ class ArmoryMainWindow(QMainWindow):
             setBtnRowVisible(DASHBTNS.Settings, True)
             setBtnRowVisible(DASHBTNS.Close, False)
 
-            if not (self.forceOnline or self.internetAvail) or CLI_OPTIONS.offline:
+            if self.internetStatus == INTERNET_STATUS.Unavailable or CLI_OPTIONS.offline:
                self.mainDisplayTabs.setTabEnabled(self.MAINTABS.Ledger, False)
                setOnlyDashModeVisible()
                self.lblDashModeSync.setText( 'Armory is <u>offline</u>', \
@@ -5862,14 +5838,28 @@ class ArmoryMainWindow(QMainWindow):
          # User is managing satoshi client, or bitcoind is already sync'd
          self.frmDashMidButtons.setVisible(False)
          if bdmState in (BDM_OFFLINE, BDM_UNINITIALIZED):
-            if self.internetAvail:
+            if self.internetStatus == INTERNET_STATUS.Unavailable:
+               self.mainDisplayTabs.setTabEnabled(self.MAINTABS.Ledger, False)
+               setOnlyDashModeVisible()
+               self.lblBusy.setVisible(False)
+               self.btnModeSwitch.setVisible(False)
+               self.btnModeSwitch.setEnabled(False)
+               self.lblDashModeSync.setText( 'Armory is <u>offline</u>', \
+                                         size=4, color='TextWarn', bold=True)
+
+               if not satoshiIsAvailable():
+                  descr = self.GetDashStateText('User','OfflineNoSatoshiNoInternet')
+               else:
+                  descr = self.GetDashStateText('User', 'OfflineNoInternet')
+
+               descr += '<br><br>'
+               descr += self.GetDashFunctionalityText('Offline')
+               self.lblDashDescr1.setText(descr)
+            else:
                LOGINFO('Dashboard switched to user-OfflineOnlinePoss')
                self.mainDisplayTabs.setTabEnabled(self.MAINTABS.Ledger, False)
                setOnlyDashModeVisible()
                self.lblBusy.setVisible(False)
-               self.btnModeSwitch.setVisible(True)
-               self.btnModeSwitch.setEnabled(True)
-               self.btnModeSwitch.setText('Go Online!')
                self.lblDashModeSync.setText('Armory is <u>offline</u>', size=4, bold=True)
                descr  = self.GetDashStateText('User', 'OfflineButOnlinePossible')
                descr += self.GetDashFunctionalityText('Offline')
@@ -5882,18 +5872,11 @@ class ArmoryMainWindow(QMainWindow):
                      'If you would like Armory to manage the Bitcoin software '
                      'for you (Bitcoin-Qt or bitcoind), then adjust your '
                      'Armory settings, then restart Armory.')
-            elif not self.internetAvail:
-               self.mainDisplayTabs.setTabEnabled(self.MAINTABS.Ledger, False)
-               setOnlyDashModeVisible()
-               self.lblBusy.setVisible(False)
-               self.btnModeSwitch.setVisible(False)
-               self.btnModeSwitch.setEnabled(False)
-               self.lblDashModeSync.setText( 'Armory is <u>offline</u>', \
-                                         size=4, color='TextWarn', bold=True)
-
-               if not satoshiIsAvailable():
                   descr = self.GetDashStateText('User','OfflineNoSatoshiNoInternet')
                else:
+                  self.btnModeSwitch.setVisible(True)
+                  self.btnModeSwitch.setEnabled(True)
+                  self.btnModeSwitch.setText('Go Online!')
                   descr = self.GetDashStateText('User', 'OfflineNoInternet')
 
                descr += '<br><br>'
@@ -5964,7 +5947,6 @@ class ArmoryMainWindow(QMainWindow):
          else:
             LOGERROR('What the heck blockchain mode are we in?  %s', bdmState)
 
-      self.lastBDMState = [bdmState, self.internetAvail]
       self.lastSDMState =  sdmState
       self.lblDashModeTorrent.setContentsMargins( 50,5,50,5)
       self.lblDashModeSync.setContentsMargins( 50,5,50,5)
@@ -6319,7 +6301,7 @@ class ArmoryMainWindow(QMainWindow):
 
 
          if self.netMode==NETWORKMODE.Disconnected:
-            if onlineModeIsPossible():
+            if self.isOnlineModePossible():
                self.switchNetworkMode(NETWORKMODE.Full)
 
 
@@ -6920,7 +6902,7 @@ def checkForAlreadyOpenError():
          armoryExists.append(proc.pid)
       if bexe in proc.name:
          LOGINFO('Found bitcoind PID: %d', proc.pid)
-         if ('testnet' in proc.name) == USE_TESTNET or USE_NAMECOIN_TESTNET:
+         if ('testnet' in proc.name) == USE_TESTNET:
             bitcoindExists.append(proc.pid)
 
    if len(armoryExists)>0:
@@ -6947,7 +6929,7 @@ if 1:
       checkForAlreadyOpen()
 
    pixLogo = QPixmap(':/splashlogo.png')
-   if USE_TESTNET or USE_NAMECOIN_TESTNET:
+   if USE_TESTNET:
       pixLogo = QPixmap(':/splashlogo_testnet.png')
    SPLASH = QSplashScreen(pixLogo)
    SPLASH.setMask(pixLogo.mask())
