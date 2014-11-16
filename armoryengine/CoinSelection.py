@@ -61,7 +61,8 @@ import math
 import random
 
 from armoryengine.ArmoryUtils import CheckHash160, binary_to_hex, coin2str, \
-   hash160_to_addrStr, ONE_BTC, CENT, int_to_binary, MIN_RELAY_TX_FEE, MIN_TX_FEE
+   hash160_to_addrStr, ONE_BTC, CENT, int_to_binary, MIN_RELAY_TX_FEE, MIN_TX_FEE, \
+   COIN
 from armoryengine.Timer import TimeThisFunction
 from armoryengine.Transaction import *
 
@@ -797,14 +798,50 @@ def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
    numBytes +=  35 * (numRecipients + (1 if change>0 else 0))
    numKb = int(numBytes / 1000)
 
-   if numKb>10:
-      return [(1+numKb)*MIN_RELAY_TX_FEE, (1+numKb)*MIN_TX_FEE]
-
    # Compute raw priority of tx
    prioritySum = 0
    for utxo in selectCoinsResult:
       prioritySum += utxo.getValue() * utxo.getNumConfirm()
    prioritySum = prioritySum / numBytes
+
+   if COIN == 'Namecoin':
+      blockSize = 1000
+      newBlockSize = blockSize + numBytes
+      maxBlockSize = 1000000
+      maxBlockSizeGen = maxBlockSize / 2
+
+      minFeeMultiplier = 1 + numKb
+
+      if ((blockSize + numBytes) < 4000) or prioritySum > ONE_BTC * 144 / 250.:
+         if blockSize == 1:
+            if numBytes < 1000:
+               return [0,0]
+         else:
+            if (newBlockSize) < 9000:
+               return [0,0]
+
+      for utxo in selectCoinsResult:
+         if utxo.getValue() < CENT:
+            minFeeMultiplier += 1
+
+      # Raise price as block approaches full
+      if blockSize != 1 and (newBlockSize) >= maxBlockSizeGen:
+         if (newBlockSize) >= (maxBlockSizeGen / 2):
+            return maxMoney
+
+      minFeeMultiplier += maxBlockSizeGen/(maxBlockSizeGen - newBlockSize)
+
+      minRelayFee, minTxFee = (minFeeMultiplier * MIN_RELAY_TX_FEE, minFeeMultiplier * MIN_TX_FEE)
+
+      if not(minRelayFee >= 0 and minRelayFee <= maxMoney):
+         minRelayFee = maxMoney
+      if not(minTxFee >= 0 and minTxFee <= maxMoney):
+         minTxFee = maxMoney
+      
+      return [minRelayFee, minTxFee]
+
+   if numKb>10:
+      return [(1+numKb)*MIN_RELAY_TX_FEE, (1+numKb)*MIN_TX_FEE]
 
    # Any tiny/dust outputs?
    haveDustOutputs = (0<change<CENT or targetOutVal<CENT)
