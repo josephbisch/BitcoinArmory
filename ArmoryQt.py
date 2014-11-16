@@ -569,7 +569,8 @@ class ArmoryMainWindow(QMainWindow):
       logoBtnFrame.append(btnWltProps)
       if self.usermode in (USERMODE.Advanced, USERMODE.Expert):
          logoBtnFrame.append(btnOfflineTx)
-      if self.usermode in (USERMODE.Expert,):
+      # No multiSig support for Namecoin
+      if self.usermode in (USERMODE.Expert,) and not COIN == 'Namecoin':
          logoBtnFrame.append(btnMultisig)
       logoBtnFrame.append(lblInfo)
       logoBtnFrame.append('Stretch')
@@ -724,7 +725,8 @@ class ArmoryMainWindow(QMainWindow):
       actPromCollect = self.createAction('Simulfund &Collect && Merge', simulMerge)
       actMultiSpend  = self.createAction('Simulfund &Review && Sign', msrevsign)
 
-      if not self.usermode==USERMODE.Expert:
+      # MultiSig not currently supported for Namecoin
+      if not self.usermode==USERMODE.Expert or COIN == 'Namecoin':
          self.menusList[MENUS.MultiSig].menuAction().setVisible(False)
 
 

@@ -8298,8 +8298,9 @@ class DlgAddressBook(ArmoryDialog):
       if not selectMineOnly:
          self.tabWidget.addTab(self.addrBookTxView, 'Sending (Other\'s)')
       # DISPLAY Lockboxes - Regardles off what showLockboxes says only show
-      # Lockboxes in Expert mode
-      if showLockboxes and self.main.usermode == USERMODE.Expert:
+      # Lockboxes in Expert mode and if not using Namecoin
+      if showLockboxes and self.main.usermode == USERMODE.Expert \
+              and not COIN == 'Namecoin':
          self.lboxModel = LockboxDisplayModel(self.main, \
                                     self.main.allLockboxes, \
                                     self.main.getPreferredDateFormat())
