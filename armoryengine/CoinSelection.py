@@ -825,8 +825,8 @@ def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
             minFeeMultiplier += 1
 
       # Raise price as block approaches full
-      if blockSize != 1 and (newBlockSize) >= maxBlockSizeGen:
-         if (newBlockSize) >= (maxBlockSizeGen / 2):
+      if blockSize != 1 and (newBlockSize) >= maxBlockSizeGen/2:
+         if (newBlockSize) >= (maxBlockSizeGen):
             return maxMoney
          minFeeMultiplier += maxBlockSizeGen/(maxBlockSizeGen - newBlockSize)
 
@@ -837,8 +837,6 @@ def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
       if not(minTxFee >= 0 and minTxFee <= maxMoney):
          minTxFee = maxMoney
       
-      print 'minRelayFee: ' + str(minRelayFee) + 'minTxFee: ' + str(minTxFee)
-
       return [minRelayFee, minTxFee]
 
    if numKb>10:
@@ -967,8 +965,8 @@ def calcMinSuggestedFeesNew(selectCoinsResult, scriptValPairs, preSelectedFee,
          minFeeMultiplier += 1
 
       # Raise price as block approaches full
-      if blockSize != 1 and (newBlockSize) >= maxBlockSizeGen:
-         if (newBlockSize) >= (maxBlockSizeGen / 2):
+      if blockSize != 1 and (newBlockSize) >= maxBlockSizeGen/2:
+         if (newBlockSize) >= (maxBlockSizeGen):
             return maxMoney
          minFeeMultiplier += maxBlockSizeGen/(maxBlockSizeGen - newBlockSize)
 
@@ -978,8 +976,6 @@ def calcMinSuggestedFeesNew(selectCoinsResult, scriptValPairs, preSelectedFee,
          minRelayFee = maxMoney
       if not(minTxFee >= 0 and minTxFee <= maxMoney):
          minTxFee = maxMoney
-
-      print 'minRelayFee: ' + str(minRelayFee) + 'minTxFee: ' + str(minTxFee)
 
       return [minRelayFee, minTxFee]
 
