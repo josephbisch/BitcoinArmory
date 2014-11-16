@@ -828,8 +828,7 @@ def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
       if blockSize != 1 and (newBlockSize) >= maxBlockSizeGen:
          if (newBlockSize) >= (maxBlockSizeGen / 2):
             return maxMoney
-
-      minFeeMultiplier += maxBlockSizeGen/(maxBlockSizeGen - newBlockSize)
+         minFeeMultiplier += maxBlockSizeGen/(maxBlockSizeGen - newBlockSize)
 
       minRelayFee, minTxFee = (minFeeMultiplier * MIN_RELAY_TX_FEE, minFeeMultiplier * MIN_TX_FEE)
 
@@ -971,8 +970,7 @@ def calcMinSuggestedFeesNew(selectCoinsResult, scriptValPairs, preSelectedFee,
       if blockSize != 1 and (newBlockSize) >= maxBlockSizeGen:
          if (newBlockSize) >= (maxBlockSizeGen / 2):
             return maxMoney
-
-      minFeeMultiplier += maxBlockSizeGen/(maxBlockSizeGen - newBlockSize)
+         minFeeMultiplier += maxBlockSizeGen/(maxBlockSizeGen - newBlockSize)
 
       minRelayFee, minTxFee = (minFeeMultiplier * MIN_RELAY_TX_FEE, minFeeMultiplier * MIN_TX_FEE)
 
