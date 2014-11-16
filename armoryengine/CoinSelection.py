@@ -809,19 +809,19 @@ def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
       newBlockSize = blockSize + numBytes
       maxBlockSize = 1000000
       maxBlockSizeGen = maxBlockSize / 2
+      maxMoney = 21000000 * ONE_BTC
 
       minFeeMultiplier = 1 + numKb
 
       if ((blockSize + numBytes) < 4000) or prioritySum > ONE_BTC * 144 / 250.:
          if blockSize == 1:
             if numBytes < 1000:
-               return [0,0]
+               minFeeMultiplier = 0
          else:
             if (newBlockSize) < 9000:
-               return [0,0]
+               minFeeMultiplier = 0
 
-      for utxo in selectCoinsResult:
-         if utxo.getValue() < CENT:
+      if targetOutVal < CENT or change > 0 and change < CENT:
             minFeeMultiplier += 1
 
       # Raise price as block approaches full
@@ -838,6 +838,8 @@ def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
       if not(minTxFee >= 0 and minTxFee <= maxMoney):
          minTxFee = maxMoney
       
+      print 'minRelayFee: ' + str(minRelayFee) + 'minTxFee: ' + str(minTxFee)
+
       return [minRelayFee, minTxFee]
 
    if numKb>10:
@@ -939,14 +941,52 @@ def calcMinSuggestedFeesNew(selectCoinsResult, scriptValPairs, preSelectedFee,
 
    numKb = int(numBytes / 1000)
 
-   if numKb>10:
-      return [(1+numKb)*MIN_RELAY_TX_FEE, (1+numKb)*MIN_TX_FEE]
-
    # Compute raw priority of tx
    prioritySum = 0
    for utxo in selectCoinsResult:
       prioritySum += utxo.getValue() * utxo.getNumConfirm()
    prioritySum = prioritySum / numBytes
+
+   if COIN == 'Namecoin':
+      blockSize = 1000
+      newBlockSize = blockSize + numBytes
+      maxBlockSize = 1000000
+      maxBlockSizeGen = maxBlockSize / 2
+      maxMoney = 21000000 * ONE_BTC
+
+      minFeeMultiplier = 1 + numKb
+
+      if ((blockSize + numBytes) < 4000) or prioritySum > ONE_BTC * 144 / 250.:
+         if blockSize == 1:
+            if numBytes < 1000:
+               minFeeMultiplier = 0
+         else:
+            if (newBlockSize) < 9000:
+               minFeeMultiplier = 0
+
+      if targetOutVal < CENT or change > 0 and change < CENT:
+         minFeeMultiplier += 1
+
+      # Raise price as block approaches full
+      if blockSize != 1 and (newBlockSize) >= maxBlockSizeGen:
+         if (newBlockSize) >= (maxBlockSizeGen / 2):
+            return maxMoney
+
+      minFeeMultiplier += maxBlockSizeGen/(maxBlockSizeGen - newBlockSize)
+
+      minRelayFee, minTxFee = (minFeeMultiplier * MIN_RELAY_TX_FEE, minFeeMultiplier * MIN_TX_FEE)
+
+      if not(minRelayFee >= 0 and minRelayFee <= maxMoney):
+         minRelayFee = maxMoney
+      if not(minTxFee >= 0 and minTxFee <= maxMoney):
+         minTxFee = maxMoney
+
+      print 'minRelayFee: ' + str(minRelayFee) + 'minTxFee: ' + str(minTxFee)
+
+      return [minRelayFee, minTxFee]
+
+   if numKb>10:
+      return [(1+numKb)*MIN_RELAY_TX_FEE, (1+numKb)*MIN_TX_FEE]
 
    # Any tiny/dust outputs?
    haveDustOutputs = (0<change<CENT or targetOutVal<CENT)
