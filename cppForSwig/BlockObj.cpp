@@ -92,12 +92,14 @@ void BlockHeader::pprintAlot(ostream & os)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-uint32_t BlockHeader::findNonce(const char* inDiffStr)
+// Due to SWIG complications, passing in a value by reference really isn't
+// feasible. Therefore, we'll use int64 and pass back -1 if we don't find a
+// nonce.
+int64_t BlockHeader::findNonce(const char* inDiffStr)
 {
    const BinaryData playHeader(serialize());
    const CryptoPP::Integer minBDiff("FFFF0000000000000000000000000000000000000000000000000000h");
    const CryptoPP::Integer inDiff(inDiffStr);
-   uint32_t solution = 0;
 
    if(inDiff > minBDiff) {
       cout << "Difficulty " << inDiffStr << " is too high for Bitcoin (bdiff)." << endl;
@@ -108,7 +110,7 @@ uint32_t BlockHeader::findNonce(const char* inDiffStr)
       std::mutex lockSolution;
       bool hasSolution=false;
 
-      const auto computer = [&] (uint32_t startAt, uint32_t stopAt)
+      const auto computer = [&] (uint32_t startAt, uint32_t stopAt)->int64_t
       {
          BinaryData hashResult(32);
          for(uint32_t nonce=startAt; nonce<stopAt; nonce++)
@@ -128,9 +130,8 @@ uint32_t BlockHeader::findNonce(const char* inDiffStr)
                pprint();
                cout << "Hash:       " << hashResult.toHexStr() << endl;
                hasSolution=true;
-               solution = nonce;
                stopNow=true;
-               return;
+               return nonce;
             }
 
             if (stopNow)
@@ -144,6 +145,9 @@ uint32_t BlockHeader::findNonce(const char* inDiffStr)
                cout.flush();
             }
          }
+
+         //needs a return val for windows to build
+         return -1;
       };
 
       const unsigned numThreads = thread::hardware_concurrency();
@@ -169,10 +173,8 @@ uint32_t BlockHeader::findNonce(const char* inDiffStr)
    }
 
    // If we've landed here for one reason or another, we've failed. Return 0.
-   return solution;
+   return -1;
 }
-
-
 
 
 /////////////////////////////////////////////////////////////////////////////
