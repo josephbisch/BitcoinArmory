@@ -715,7 +715,7 @@ def PySelectCoins(unspentTxOutInfo, targetOutVal, minFee=0, numRand=10, margin=C
    return finalSelection
 
 ################################################################################
-def calcMinSuggestedFeesHackMS(selectCoinsResult, targetOutVal, preSelectedFee, 
+def calcMinSuggestedFeesHackMS(selectCoinsResult, sendValues, preSelectedFee, 
                                                          numRecipients):
    """
    This is a hack, because the calcMinSuggestedFees below assumes standard
@@ -724,6 +724,7 @@ def calcMinSuggestedFeesHackMS(selectCoinsResult, targetOutVal, preSelectedFee,
 
    we just copy the original method with an update to the computation
    """
+   targetOutVal = sum(sendValues)
    paid = targetOutVal + preSelectedFee
    change = sum([u.getValue() for u in selectCoinsResult]) - paid
 
@@ -766,7 +767,7 @@ def calcMinSuggestedFeesHackMS(selectCoinsResult, targetOutVal, preSelectedFee,
       
 
 ################################################################################
-def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
+def calcMinSuggestedFees(selectCoinsResult, sendValues, preSelectedFee,
                          numRecipients):
    """
    Returns two fee options:  one for relay, one for include-in-block.
@@ -789,6 +790,7 @@ def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
    if len(selectCoinsResult)==0:
       return [-1,-1]
 
+   targetOutVal = sum(sendValues)
    paid = targetOutVal + preSelectedFee
    change = sum([u.getValue() for u in selectCoinsResult]) - paid
 
@@ -821,7 +823,8 @@ def calcMinSuggestedFees(selectCoinsResult, targetOutVal, preSelectedFee,
             if (newBlockSize) < 9000:
                minFeeMultiplier = 0
 
-      if targetOutVal < CENT or change > 0 and change < CENT:
+      for out in sendValues:
+         if out < CENT:
             minFeeMultiplier += 1
 
       # Raise price as block approaches full

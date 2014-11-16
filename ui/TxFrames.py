@@ -472,6 +472,7 @@ class SendBitcoinsFrame(ArmoryFrame):
       # Construct recipValuePairs and check that all metrics check out
       scriptValPairs = []
       totalSend = 0
+      sendValues = []
       for row in range(len(self.widgetTable)):
          try:
             recipStr = str(self.widgetTable[row]['QLE_ADDR'].text()).strip()
@@ -506,6 +507,7 @@ class SendBitcoinsFrame(ArmoryFrame):
             return False
 
          totalSend += value
+         sendValues.append(value)
 
          script = self.widgetTable[row]['FUNC_GETSCRIPT']()['Script']
          #scraddr = script_to_scrAddr(script)
@@ -600,10 +602,10 @@ class SendBitcoinsFrame(ArmoryFrame):
          utxoSelect = PySelectCoins(utxoList, totalSend, feeTry)
       
          if self.lbox is None:
-            minFee = calcMinSuggestedFees(utxoSelect, totalSend, feeTry, \
+            minFee = calcMinSuggestedFees(utxoSelect, sendValues, feeTry, \
                                              len(scriptValPairs))[1]
          else:
-            minFee = calcMinSuggestedFeesHackMS(utxoSelect, totalSend, feeTry, \
+            minFee = calcMinSuggestedFeesHackMS(utxoSelect, sendValues, feeTry, \
                                              len(scriptValPairs))[1]
 
 
