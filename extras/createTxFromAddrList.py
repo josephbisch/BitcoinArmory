@@ -66,7 +66,8 @@ def createTxFromAddrList(walletObj, addrList, recipAmtPairList, \
    
    # Display what we found
    totalUtxo = sumTxOutList(utxoList)
-   totalSpend   = sum([pair[1] for pair in recipList])
+   sendValues   = [pair[1] for pair in recipList]
+   totalSpend = sum(sendValues)
    print 'Available:  %d unspent outputs from %d addresses: %s BTC' % \
                   (len(utxoList), len(addrList), coin2str(totalUtxo, ndec=2))
 
@@ -87,7 +88,7 @@ def createTxFromAddrList(walletObj, addrList, recipAmtPairList, \
    selectedUtxoList = PySelectCoins(utxoList, totalSpend, fee)
 
    print 'Checking that minimum required fee is satisfied for this tx...'
-   minValidFee = calcMinSuggestedFees(selectedUtxoList, totalSpend, fee, len(recipList))[1]
+   minValidFee = calcMinSuggestedFees(selectedUtxoList, sendValues, fee, len(recipList))[1]
 
    if minValidFee>fee:
       print '***WARNING:'

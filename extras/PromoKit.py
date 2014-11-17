@@ -202,8 +202,11 @@ def distributeBtc(masterWallet, amount, sendingAddrList):
       for importedAddr in masterWallet.getLinearAddrList():
          if importedAddr.chainIndex<0:
             recipValuePairs.append((importedAddr.getAddr160(),amount))
-      totalSpend = len(recipValuePairs)*amount
-      fee = calcMinSuggestedFees(utxoList, totalSpend, MIN_RELAY_TX_FEE, len(recipValuePairs))[1]
+      sendValues = []
+      for i in range(len(recipValuePairs)):
+         sendValues.append(amount)
+         totalSpend += amount
+      fee = calcMinSuggestedFees(utxoList, sendValues, MIN_RELAY_TX_FEE, len(recipValuePairs))[1]
       # Get the necessary utxo list
       selectedUtxoList = PySelectCoins(utxoList, totalSpend, fee)
       # get total value   
@@ -266,8 +269,9 @@ def sweepImportedAddrs(masterWallet):
          utxoList.extend(masterWallet.getAddrTxOutList(addr160))
 
    # get total value   
-   totalAvailable = sum([u.getValue() for u in utxoList])
-   fee = calcMinSuggestedFees(utxoList, totalAvailable, MIN_RELAY_TX_FEE, 1)[1]
+   sendValues = [u.getValue() for u in utxoList]
+   totalAvailable = sum(sendValues)
+   fee = calcMinSuggestedFees(utxoList, sendValues, MIN_RELAY_TX_FEE, 1)[1]
    totalSpend = totalAvailable - fee
    if totalSpend<0:
       print '***ERROR: The fees are greater than the funds being swept!'
