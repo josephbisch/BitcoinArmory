@@ -9265,8 +9265,9 @@ class DlgSettings(ArmoryDialog):
       frmLayout.addWidget(frmMgmt, i, 0, 1, 3)
       i += 1
       frmLayout.addWidget(self.chkSkipOnlineCheck, i, 0, 1, 3)
-      i += 1
-      frmLayout.addWidget(self.chkDisableTorrent, i, 0, 1, 3)
+      if COIN != 'Namecoin':
+         i += 1
+         frmLayout.addWidget(self.chkDisableTorrent, i, 0, 1, 3)
 
       i += 1
       frmLayout.addWidget(HLINE(), i, 0, 1, 3)

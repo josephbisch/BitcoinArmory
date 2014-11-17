@@ -254,6 +254,7 @@ if USE_NAMECOIN or USE_NAMECOIN_TESTNET:
    MIN_TX_FEE = 500000
    MIN_RELAY_TX_FEE = 100000
    COIN = 'Namecoin'
+   CLI_OPTIONS.disableTorrent = True
 
 # Set default port for inter-process communication
 if CLI_OPTIONS.interport < 0:
