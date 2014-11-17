@@ -4612,7 +4612,7 @@ protected:
       config_.armoryDbType = ARMORY_DB_FULL;
       config_.pruneType = DB_PRUNE_NONE;
       config_.levelDBLocation = string("ldbtestdir");
-      config_.chain = "Bitcoin"
+      config_.chain = "Bitcoin";
 
       config_.genesisBlockHash = ghash_;
       config_.genesisTxHash = gentx_;
@@ -6377,17 +6377,18 @@ protected:
       ghash_ = READHEX(MAINNET_GENESIS_HASH_HEX);
       gentx_ = READHEX(MAINNET_GENESIS_TX_HASH_HEX);
       zeros_ = READHEX("00000000");
-
+      
       blkdir_  = string("./blkfiletest");
       homedir_ = string("./fakehomedir");
       ldbdir_  = string("./ldbtestdir");
+      chain_ = "Bitcoin";
 
 
       mkdir(blkdir_);
       mkdir(homedir_);
 
       // Put the first 5 blocks into the blkdir
-      blk0dat_ = BtcUtils::getBlkFilename(config_.chain, blkdir_, 0);
+      blk0dat_ = BtcUtils::getBlkFilename(chain_, blkdir_, 0);
       setBlocks({"0", "1", "2", "3", "4", "5"}, blk0dat_);
 
       config.armoryDbType = ARMORY_DB_BARE;
@@ -6442,6 +6443,7 @@ protected:
    string homedir_;
    string ldbdir_;
    string blk0dat_;
+   string chain_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6457,6 +6459,7 @@ protected:
    const string blkdir_  = "./blkfiletest";
    const string homedir_ = "./fakehomedir";
    const string ldbdir_  = "./ldbtestdir";
+   const string chain    = "Bitcoin";
    
    string blk0dat_;
 
@@ -6468,7 +6471,7 @@ protected:
       mkdir(blkdir_);
       mkdir(homedir_);
       
-      blk0dat_ = BtcUtils::getBlkFilename(config_.chain, blkdir_, 0);
+      blk0dat_ = BtcUtils::getBlkFilename(chain, blkdir_, 0);
    }
    
    /////////////////////////////////////////////////////////////////////////////
@@ -6707,6 +6710,7 @@ TEST_F(BlockDir, BlockFileSplit)
    config.pruneType = DB_PRUNE_NONE;
    config.blkFileLocation = blkdir_;
    config.levelDBLocation = ldbdir_;
+   config.chain = "Bitcoin";
    
    config.genesisBlockHash = READHEX(MAINNET_GENESIS_HASH_HEX);
    config.genesisTxHash = READHEX(MAINNET_GENESIS_TX_HASH_HEX);
@@ -6714,7 +6718,7 @@ TEST_F(BlockDir, BlockFileSplit)
    
    setBlocks({ "0", "1" }, blk0dat_);
    
-   std::string blk1dat = BtcUtils::getBlkFilename(config_.chain, blkdir_, 1);
+   std::string blk1dat = BtcUtils::getBlkFilename(config.chain, blkdir_, 1);
    setBlocks({ "2", "3", "4","5" }, blk1dat);
    
    BlockDataManager_LevelDB bdm(config);
@@ -6752,6 +6756,7 @@ TEST_F(BlockDir, BlockFileSplitUpdate)
    config.pruneType = DB_PRUNE_NONE;
    config.blkFileLocation = blkdir_;
    config.levelDBLocation = ldbdir_;
+   config.chain = "Bitcoin";
    
    config.genesisBlockHash = READHEX(MAINNET_GENESIS_HASH_HEX);
    config.genesisTxHash = READHEX(MAINNET_GENESIS_TX_HASH_HEX);
@@ -6774,7 +6779,7 @@ TEST_F(BlockDir, BlockFileSplitUpdate)
    bdm.doInitialSyncOnLoad( nullProgress ); 
    bdv.scanWallets();
  
-   std::string blk1dat = BtcUtils::getBlkFilename(config_.chain, blkdir_, 1);
+   std::string blk1dat = BtcUtils::getBlkFilename(config.chain, blkdir_, 1);
    appendBlocks({ "2", "4", "3", "5" }, blk0dat_);
    bdm.readBlkFileUpdate();
    bdv.scanWallets();
@@ -8488,7 +8493,7 @@ protected:
       mkdir(homedir_);
 
       // Put the first 5 blocks into the blkdir
-      blk0dat_ = BtcUtils::getBlkFilename(config_.chain, blkdir_, 0);
+      blk0dat_ = BtcUtils::getBlkFilename(theBDM->config().chain, blkdir_, 0);
       setBlocks({ "0", "1", "2", "3", "4", "5" }, blk0dat_);
 
       BlockDataManagerConfig config;
@@ -8983,7 +8988,7 @@ protected:
       mkdir(homedir_);
 
       // Put the first 5 blocks into the blkdir
-      blk0dat_ = BtcUtils::getBlkFilename(config_.chain, blkdir_, 0);
+      blk0dat_ = BtcUtils::getBlkFilename(theBDM->config().chain, blkdir_, 0);
       setBlocks({ "0", "1", "2", "3", "4", "5" }, blk0dat_);
       
       BlockDataManagerConfig config;
