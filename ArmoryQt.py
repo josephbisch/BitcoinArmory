@@ -411,9 +411,9 @@ class ArmoryMainWindow(QMainWindow):
       self.lblSpd.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
       self.lblUcn.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
-      self.lblBTC1 = QRichLabel('<b>BTC</b>', doWrap=False)
-      self.lblBTC2 = QRichLabel('<b>BTC</b>', doWrap=False)
-      self.lblBTC3 = QRichLabel('<b>BTC</b>', doWrap=False)
+      self.lblBTC1 = QRichLabel('<b>%s</b>' % getCoinText(abbrev=True), doWrap=False)
+      self.lblBTC2 = QRichLabel('<b>%s</b>' % getCoinText(abbrev=True), doWrap=False)
+      self.lblBTC3 = QRichLabel('<b>%s</b>' % getCoinText(abbrev=True), doWrap=False)
       self.ttipTot = self.createToolTipWidget( \
             'Funds if all current transactions are confirmed.  '
             'Value appears gray when it is the same as your spendable funds.')
@@ -545,8 +545,8 @@ class ArmoryMainWindow(QMainWindow):
       ##########################################################################
 
 
-      btnSendBtc   = QPushButton(tr("Send Bitcoins"))
-      btnRecvBtc   = QPushButton(tr("Receive Bitcoins"))
+      btnSendBtc   = QPushButton(tr("Send " + getCoinText(plural=True)))
+      btnRecvBtc   = QPushButton(tr("Receive " + getCoinText(plural=True)))
       btnWltProps  = QPushButton(tr("Wallet Properties"))
       btnOfflineTx = QPushButton(tr("Offline Transactions"))
       btnMultisig  = QPushButton(tr("Lockboxes (Multi-Sig)"))
@@ -1328,8 +1328,8 @@ class ArmoryMainWindow(QMainWindow):
          self.clickReceiveCoins()
 
       actShowArmory = self.createAction('Show Armory', self.bringArmoryToFront)
-      actSendBtc    = self.createAction('Send Bitcoins', traySend)
-      actRcvBtc     = self.createAction('Receive Bitcoins', trayRecv)
+      actSendBtc    = self.createAction('Send ' + getCoinText(plural=True), traySend)
+      actRcvBtc     = self.createAction('Receive ' + getCoinText(plural=True), trayRecv)
       actClose      = self.createAction('Quit Armory', self.closeForReal)
       # Create a short menu of options
       menu.addAction(actShowArmory)
@@ -2408,11 +2408,11 @@ class ArmoryMainWindow(QMainWindow):
                return
 
             try:
-               self.showTrayMsg('Disconnected', 'Connection to Bitcoin-Qt ' \
-			                    'client lost!  Armory cannot send nor ' \
-								'receive bitcoins until connection is ' \
-								're-established.', QSystemTrayIcon.Critical, \
-								10000)
+               self.showTrayMsg('Disconnected', 'Connection to ' + \
+                                getCoinText() + '-Qt client lost!  Armory ' + \
+                                'cannot send nor receive bitcoins until ' + \
+                                'connection is re-established.',
+                                QSystemTrayIcon.Critical, 10000)
             except:
                LOGEXCEPT('Failed to show disconnect notification')
 
@@ -2429,8 +2429,8 @@ class ArmoryMainWindow(QMainWindow):
 
             try:
                if self.connectCount>0:
-                  self.showTrayMsg('Connected', 'Connection to Bitcoin-Qt ' \
-                                   're-established', \
+                  self.showTrayMsg('Connected', 'Connection to ' + \
+                                   getCoinText() + '-Qt re-established', \
 								   QSystemTrayIcon.Information, 10000)
                self.connectCount += 1
             except:
@@ -3109,7 +3109,8 @@ class ArmoryMainWindow(QMainWindow):
          goodColor= htmlColor('TextGreen')
          self.lblTotalFunds.setText( '<b><font color="%s">%s</font></b>' % (btccolor,coin2str(totalFunds)))
          self.lblTot.setText('<b><font color="%s">Maximum Funds:</font></b>' % lblcolor)
-         self.lblBTC1.setText('<b><font color="%s">BTC</font></b>' % lblcolor)
+         self.lblBTC1.setText('<b><font color="%s">' % lblcolor + \
+                              getCoinText(abbrev=True) + '</font></b>')
          self.lblSpendFunds.setText( '<b><font color=%s>%s</font></b>' % (goodColor, coin2str(spendFunds)))
          self.lblUnconfFunds.setText('<b><font color="%s">%s</font></b>' % \
                                              (uncolor, coin2str(unconfFunds)))
@@ -3978,7 +3979,7 @@ class ArmoryMainWindow(QMainWindow):
       if uri_has('amount'):
          amt     = uriDict['amount']
          amtstr  = coin2str(amt, maxZeros=1)
-         descrStr += '<br>--<b>Amount</b>:\t%s BTC' % amtstr
+         descrStr += '<br>--<b>Amount</b>:\t%s %s' % (amtstr, getCoinText(abbrev=True))
 
 
       if newMsg:
@@ -4014,7 +4015,7 @@ class ArmoryMainWindow(QMainWindow):
 
    #############################################################################
    def clickReceiveCoins(self):
-      LOGDEBUG('Clicked "Receive Bitcoins Button"')
+      LOGDEBUG('Clicked "Receive ' + getCoinText(plural=True) + ' Button"')
       wltID = None
       selectionMade = True
       if len(self.walletMap)==0:
@@ -4366,9 +4367,11 @@ class ArmoryMainWindow(QMainWindow):
       self.lblDashBtnDescr.setOpenExternalLinks(True)
       BTN,LBL,TTIP = range(3)
       self.dashBtns = [[None]*3 for i in range(5)]
-      self.dashBtns[DASHBTNS.Close   ][BTN] = QPushButton('Close Bitcoin Process')
-      self.dashBtns[DASHBTNS.Install ][BTN] = QPushButton('Download Bitcoin')
-      self.dashBtns[DASHBTNS.Browse  ][BTN] = QPushButton('Open www.bitcoin.org')
+      self.dashBtns[DASHBTNS.Close   ][BTN] = QPushButton('Close ' + getCoinText() + ' Process')
+      self.dashBtns[DASHBTNS.Install ][BTN] = QPushButton('Download ' + getCoinText())
+      self.dashBtns[DASHBTNS.Browse  ][BTN] = QPushButton('Open www.namecoin.info'
+                                                          if COIN == 'Namecoin'
+                                                          else 'Open www.bitcoin.org')
       self.dashBtns[DASHBTNS.Instruct][BTN] = QPushButton('Installation Instructions')
       self.dashBtns[DASHBTNS.Settings][BTN] = QPushButton('Change Settings')
 
@@ -4391,7 +4394,10 @@ class ArmoryMainWindow(QMainWindow):
 
       #####
       def openBitcoinOrg():
-         webbrowser.open('http://www.bitcoin.org/en/download')
+         if COIN == 'Namecoin':
+            webbrowser.open('http://www.namecoin.info/')
+         else:
+            webbrowser.open('http://www.bitcoin.org/en/download')
 
 
       #####
@@ -4420,13 +4426,13 @@ class ArmoryMainWindow(QMainWindow):
                                                      #self.openInstructWindow)
 
       self.dashBtns[DASHBTNS.Close][LBL] = QRichLabel( \
-           'Stop existing Bitcoin processes so that Armory can open its own')
+           'Stop existing ' + getCoinText() + ' processes so that Armory can open its own')
       self.dashBtns[DASHBTNS.Browse][LBL]     = QRichLabel( \
-           'Open browser to Bitcoin webpage to download and install Bitcoin software')
+           'Open browser to ' + getCoinText() + ' webpage to download and install Bitcoin software')
       self.dashBtns[DASHBTNS.Instruct][LBL] = QRichLabel( \
-           'Instructions for manually installing Bitcoin for operating system')
+           'Instructions for manually installing ' + getCoinText() + ' for operating system')
       self.dashBtns[DASHBTNS.Settings][LBL]  = QRichLabel( \
-           'Open Armory settings window to change Bitcoin software management')
+           'Open Armory settings window to change ' + getCoinText() + ' software management')
 
 
       self.dashBtns[DASHBTNS.Browse][TTIP] = self.createToolTipWidget( \
@@ -6376,12 +6382,12 @@ class ArmoryMainWindow(QMainWindow):
       if ledgerAmt > 0:
          # Received!
          title = 'Bitcoins Received!'
-         dispLines.append('Amount:  %s BTC' % totalStr)
+         dispLines.append('Amount:  %s %s' % (totalStr, getCoinText(abbrev=True)))
          dispLines.append('Recipient:  %s' % dispName)
       elif ledgerAmt < 0:
          # Sent!
          title = 'Bitcoins Sent!'
-         dispLines.append('Amount:  %s BTC' % totalStr)
+         dispLines.append('Amount:  %s %s' % (totalStr, getCoinText(abbrev=True)))
          dispLines.append('Sender:  %s' % dispName)
 
       self.showTrayMsg(title, '\n'.join(dispLines), \
@@ -6454,7 +6460,8 @@ class ArmoryMainWindow(QMainWindow):
             #             'Wallet "%s" (%s) just sent %s BTC to itself!' % \
             #         (wlt.labelName, moneyID, coin2str(amt,maxZeros=1).strip()),
             self.showTrayMsg('Your bitcoins just did a lap!', \
-                             '%s just sent some BTC to itself!' % wltName, \
+                             '%s just sent some %s to itself!' \
+                             % (wltName, getCoinText(abbrev=True)), \
                              QSystemTrayIcon.Information, 10000)
             return
 
@@ -6462,8 +6469,8 @@ class ArmoryMainWindow(QMainWindow):
          dispLines = []
          totalStr = coin2strNZS(abs(le.getValue()))
          if le.getValue() > 0:
-            title = 'Bitcoins Received!'
-            dispLines.append('Amount:  %s BTC' % totalStr)
+            title = getCoinText(plural=True) + ' Received!'
+            dispLines.append('Amount:  %s %s' % (totalStr, getCoinText(abbrev=True)))
             dispLines.append('Recipient:  %s' % wltName)
          elif le.getValue() < 0:
             # Also display the address of where they went
@@ -6479,8 +6486,8 @@ class ArmoryMainWindow(QMainWindow):
                else:
                   recipStr = '<Multiple Recipients>'
             
-            title = 'Bitcoins Sent!'
-            dispLines.append('Amount:  %s BTC' % totalStr)
+            title = getCoinText(plural=True) + ' Sent!'
+            dispLines.append('Amount:  %s %s' % (totalStr, getCoinText(abbrev=True)))
             dispLines.append('From:    %s' % wltName)
             dispLines.append('To:      %s' % recipStr)
    

@@ -1431,7 +1431,7 @@ class DlgPasswd3(ArmoryDialog):
          '<font color="red"><b>!!! DO NOT FORGET YOUR PASSPHRASE !!!</b></font>', size=4)
       lblWarnTxt1.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
       lblWarnTxt2 = QRichLabel(\
-         '<b>No one can help you recover you bitcoins if you forget the '
+         '<b>No one can help you recover you %s if you forget the '
          'passphrase and don\'t have a paper backup!</b> Your wallet and '
          'any <u>digital</u> backups are useless if you forget it.  '
          '<br><br>'
@@ -1442,7 +1442,8 @@ class DlgPasswd3(ArmoryDialog):
          'a safe place.'
          '<br><br>'
          'Please enter your passphrase a third time to indicate that you '
-         'are aware of the risks of losing your passphrase!</b>', doWrap=True)
+         'are aware of the risks of losing your passphrase!</b>' % \
+                 getCoinText(capitalize=False, plural=True), doWrap=True)
 
 
       self.edtPasswd3 = QLineEdit()
@@ -1584,8 +1585,8 @@ class DlgWalletDetails(ArmoryDialog):
 
       exportStr = 'Data' if self.wlt.watchingOnly else 'Copy'
       
-      lbtnSendBtc = QLabelButton('Send Bitcoins')
-      lbtnGenAddr = QLabelButton('Receive Bitcoins')
+      lbtnSendBtc = QLabelButton('Send %s' % getCoinText(plural=True))
+      lbtnGenAddr = QLabelButton('Receive %s' % getCoinText(plural=True))
       lbtnImportA = QLabelButton('Import/Sweep Private Keys')
       lbtnDeleteA = QLabelButton('Remove Imported Address')
       # lbtnSweepA  = QLabelButton('Sweep Wallet/Address')
@@ -1608,15 +1609,17 @@ class DlgWalletDetails(ArmoryDialog):
       self.connect(lbtnExpWOWlt, SIGNAL(CLICKED), self.execExpWOCopy)
       #self.connect(lbtnRecover, SIGNAL(CLICKED), self.recoverPwd)
 
-      lbtnSendBtc.setToolTip('<u></u>Send bitcoins to other users, or transfer '
-                             'between wallets')
+      lbtnSendBtc.setToolTip('<u></u>Send %s to other users, or transfer '
+                             'between wallets' \
+                             % getCoinText(capitalized=False, plural=True))
       if self.wlt.watchingOnly:
          lbtnSendBtc.setToolTip('<u></u>If you have a full-copy of this wallet '
                                 'on another computer, you can prepare a '
                                 'transaction, to be signed by that computer.')
       lbtnGenAddr.setToolTip('<u></u>Get a new address from this wallet for receiving '
-                             'bitcoins.  Right click on the address list below '
-                             'to copy an existing address.')
+                             '%s.  Right click on the address list below to copy an '
+                             'existing address.' % \
+                                     getCoinText(capitalized=False, plural=True))
       lbtnImportA.setToolTip('<u></u>Import or "Sweep" an address which is not part '
                              'of your wallet.  Useful for VanityGen addresses '
                              'and redeeming Casascius physical bitcoins.')
@@ -1856,9 +1859,9 @@ class DlgWalletDetails(ArmoryDialog):
       self.lblSpendFunds.setText(spdStr)
       self.lblUnconfFunds.setText(ucnStr)
 
-      self.lblBTC1.setText('<b><font color="%s">BTC</font></b>' % lblcolor)
-      self.lblBTC2.setText('<b>BTC</b>')
-      self.lblBTC3.setText('<b>BTC</b>')
+      self.lblBTC1.setText('<b><font color="%s">%s</font></b>' % (lblcolor, getCoinText(abbrev=True)))
+      self.lblBTC2.setText('<b>%s</b>' % getCoinText(abbrev=True))
+      self.lblBTC3.setText('<b>%s</b>' % getCoinText(abbrev=True))
 
 
    #############################################################################
@@ -2551,13 +2554,14 @@ def showRecvCoinsWarningIfNecessary(wlt, main):
       result = QMessageBox.warning(main, tr('Careful!'), tr("""
          Armory is not online yet, and will eventually need to be online to
          access any funds sent to your wallet.  Please <u><b>do not</b></u>
-         receive Bitcoins to your Armory wallets until you have successfully
+         receive %s to your Armory wallets until you have successfully
          gotten online <i>at least one time</i>.
          <br><br>
          Armory is still beta software, and some users report difficulty
          ever getting online.
          <br><br>
-         Do you wish to continue?"""), QMessageBox.Cancel | QMessageBox.Ok)
+         Do you wish to continue?""" % getCoinText(capitalized=False, plural=True)),
+         QMessageBox.Cancel | QMessageBox.Ok)
       if not result == QMessageBox.Ok:
          return False
 
@@ -2781,10 +2785,10 @@ class DlgNewAddressDisp(ArmoryDialog):
       tooltip1 = self.main.createToolTipWidget(\
             'You can securely use this address as many times as you want. '
             'However, all people to whom you give this address will '
-            'be able to see the number and amount of bitcoins <b>ever</b> '
+            'be able to see the number and amount of %s <b>ever</b> '
             'sent to it.  Therefore, using a new address for each transaction '
             'improves overall privacy, but there is no security issues '
-            'with reusing any address.')
+            'with reusing any address.' % getCoinText(capitalized=False, plural=True))
 
       frmNewAddr = QFrame()
       frmNewAddr.setFrameStyle(STYLE_RAISED)
@@ -2833,8 +2837,8 @@ class DlgNewAddressDisp(ArmoryDialog):
       frmComment.setLayout(frmCommentLayout)
 
 
-      lblRecvWlt = QRichLabel('Bitcoins sent to this address will '
-            'appear in the wallet:', doWrap=False)
+      lblRecvWlt = QRichLabel('%s sent to this address will '
+            'appear in the wallet:' % getCoinText(plural=True), doWrap=False)
 
       lblRecvWlt.setWordWrap(True)
       lblRecvWlt.setAlignment(Qt.AlignHCenter | Qt.AlignTop)
@@ -3225,9 +3229,10 @@ class DlgImportAddress(ArmoryDialog):
                      '<b>Wallet Name</b>: ' + self.main.walletMap[wltID].labelName + '<br>'
                      '<b>Address Type</b>: ' + typ +
                      '<br><br>'
-                     'The sweep operation will simply move bitcoins out of the wallet '
+                     'The sweep operation will simply move %s out of the wallet '
                      'above into this wallet.  If the network charges a fee for this '
-                     'transaction, you balance will be reduced by that much.')
+                     'transaction, you balance will be reduced by that much.' % \
+                             getCoinText(capitalized=False, plural=True))
                result = QMessageBox.warning(self, 'Duplicate Address', msg, \
                      QMessageBox.Ok | QMessageBox.Cancel)
                if not result == QMessageBox.Ok:
@@ -3383,10 +3388,11 @@ class DlgImportAddress(ArmoryDialog):
             reply = QMessageBox.critical(self, 'Duplicate Addresses!', \
                'You are attempting to sweep %d addresses, but %d of them '
                'are already part of existing wallets.  That means that some or '
-               'all of the bitcoins you sweep may already be owned by you. '
+               'all of the %s you sweep may already be owned by you. '
                '<br><br>'
                'Would you like to continue anyway?' % \
-               (len(allWltList), len(dupeWltList)), \
+               (len(allWltList), len(dupeWltList), \
+                   getCoinText(capitalized=False, plural=True)), \
                QMessageBox.Ok | QMessageBox.Cancel)
             if reply == QMessageBox.Cancel:
                return
@@ -3556,7 +3562,7 @@ class DlgVerifySweep(ArmoryDialog):
       # frmLayout.addWidget(QRichLabel('Funds will be <i>swept</i>...'), 0,0, 1,2)
       frmLayout.addWidget(QRichLabel('      From ' + inputStr, doWrap=False), 1, 0, 1, 2)
       frmLayout.addWidget(QRichLabel('      To ' + outputStr, doWrap=False), 2, 0, 1, 2)
-      frmLayout.addWidget(QRichLabel('      Total <b>%s</b> BTC %s' % (outStr, feeStr), doWrap=False), 3, 0, 1, 2)
+      frmLayout.addWidget(QRichLabel('      Total <b>%s</b> %s %s' % (outStr, getCoinText(abbrev=True), feeStr), doWrap=False), 3, 0, 1, 2)
       frm.setLayout(frmLayout)
 
       lblFinalConfirm = QLabel('Are you sure you want to execute this transaction?')
@@ -3782,9 +3788,9 @@ class DlgAddressInfo(ArmoryDialog):
       if balCoin > 0:
          goodColor = htmlColor('MoneyPos')
          lbls[-1].append(QRichLabel(\
-            '<font color=' + goodColor + '>' + balStr.strip() + '</font> BTC'))
+            '<font color=' + goodColor + '>' + balStr.strip() + '</font> %s' % getCoinText(abbrev=True)))
       else:
-         lbls[-1].append(QRichLabel(balStr.strip() + ' BTC'))
+         lbls[-1].append(QRichLabel(balStr.strip() + ' %s' % getCoinText(abbrev=True)))
 
       lbls.append([])
       lbls[-1].append(QLabel(''))
@@ -4126,7 +4132,7 @@ class DlgEULA(ArmoryDialog):
          'Additionally, as a condition of receiving this software '
          'for free, you accept all risks associated with using it '
          'and the developers of Armory will not be held liable for any '
-         'loss of money or bitcoins due to software defects.'
+         'loss of money or bitcoins or namecoins due to software defects.'
          '<br><br>'
          '<b>Please read the full terms of the license and indicate your '
          'agreement with its terms.</b>')
@@ -4177,7 +4183,7 @@ class DlgIntroMessage(ArmoryDialog):
          '<b>You are about to use the most secure and feature-rich Bitcoin client '
          'software available!</b>  But please remember, this software '
          'is still <i>Beta</i> - Armory developers will not be held responsible '
-         'for loss of bitcoins resulting from the use of this software!'
+         'for loss of bitcoins or namecoins resulting from the use of this software!'
          '<br><br>'
          'For more info about Armory, and Bitcoin itself, see '
          '<a href="https://bitcoinarmory.com/faqs">frequently '
@@ -4537,11 +4543,11 @@ class DlgRemoveWallet(ArmoryDialog):
          lbls.append([])
          lbls[3].append(QLabel('Current Balance (w/ unconfirmed):'))
          if bal > 0:
-            lbls[3].append(QLabel('<font color="red"><b>' + coin2str(bal, maxZeros=1).strip() + ' BTC</b></font>'))
+            lbls[3].append(QLabel('<font color="red"><b>' + coin2str(bal, maxZeros=1).strip() + ' %s</b></font>' % getCoinText(abbrev=True)))
             lbls[3][-1].setTextFormat(Qt.RichText)
             wltEmpty = False
          else:
-            lbls[3].append(QLabel(coin2str(bal, maxZeros=1) + ' BTC'))
+            lbls[3].append(QLabel(coin2str(bal, maxZeros=1) + ' %s' % getCoinText(abbrev=True)))
 
 
       # Add two WARNING images on either side of dialog
@@ -4837,11 +4843,11 @@ class DlgRemoveAddress(ArmoryDialog):
          lbls.append([])
          lbls[-1].append(QLabel('Address Balance (w/ unconfirmed):'))
          if bal > 0:
-            lbls[-1].append(QLabel('<font color="red"><b>' + coin2str(bal, maxZeros=1) + ' BTC</b></font>'))
+            lbls[-1].append(QLabel('<font color="red"><b>' + coin2str(bal, maxZeros=1) + ' %s</b></font>' % getCoinText(abbrev=True)))
             lbls[-1][-1].setTextFormat(Qt.RichText)
             addrEmpty = False
          else:
-            lbls[3].append(QLabel(coin2str(bal, maxZeros=1) + ' BTC'))
+            lbls[3].append(QLabel(coin2str(bal, maxZeros=1) + ' %s' % getCoinText(abbrev=True)))
 
 
       # Add two WARNING images on either side of dialog
@@ -4894,11 +4900,12 @@ class DlgRemoveAddress(ArmoryDialog):
            'Simply deleting an address does not prevent anyone '
            'from sending money to it.  If you have given this address '
            'to anyone in the past, make sure that they know not to '
-           'use it again, since any bitcoins sent to it will be '
+           'use it again, since any %s sent to it will be '
            'inaccessible.\n\n '
            'If you are maintaining an external copy of this address '
            'please ignore this warning\n\n'
-           'Are you absolutely sure you want to delete ' +
+           'Are you absolutely sure you want to delete ' % \
+                   getCoinText(capitalized=False, plural=True) +
            self.addr.getAddrStr() + '?', \
            QMessageBox.Yes | QMessageBox.Cancel)
 
@@ -5089,10 +5096,11 @@ class DlgConfirmSend(ArmoryDialog):
 
 
       lblMsg = QRichLabel(tr("""
-         This transaction will spend <b>%s BTC</b> from 
+         This transaction will spend <b>%s %s</b> from 
          <font color="%s">Wallet "<b>%s</b>" (%s)</font> to the following
          recipients:""") % 
-         (totalSendStr, htmlColor('TextBlue'), wlt.labelName, wlt.uniqueIDB58))
+         (totalSendStr, getCoinText(abbrev=True), htmlColor('TextBlue'),
+          wlt.labelName, wlt.uniqueIDB58))
 
       if doShowLeaveWlt:
          lblAfterBox.setText(tr("""
@@ -5100,8 +5108,8 @@ class DlgConfirmSend(ArmoryDialog):
             outputs are going to the same wallet from which they came 
             and do not affect the wallet's final balance.
             The total balance of the wallet will actually only decrease 
-            <b>%s BTC</b> as a result of this transaction.  %s</font>""") % \
-            (sendFromWalletStr, showAllMsg))
+            <b>%s %s</b> as a result of this transaction.  %s</font>""") % \
+            (sendFromWalletStr, getCoinText(abbrev=True), showAllMsg))
       elif len(showAllMsg)>0:
          lblAfterBox.setText(showAllMsg)
          
@@ -5187,7 +5195,7 @@ class DlgSendBitcoins(ArmoryDialog):
 
       self.spendFromLockboxID = spendFromLockboxID
 
-      self.frame = SendBitcoinsFrame(self, main, tr('Send Bitcoins'),
+      self.frame = SendBitcoinsFrame(self, main, tr('Send %s' % getCoinText(plural=True)),
                    wlt, prefill, wltIDList, onlyOfflineWallets=onlyOfflineWallets,
                    sendCallback=self.createTxAndBroadcast,
                    createUnsignedTxCallback=self.createUnsignedTxAndDisplay, 
@@ -5729,9 +5737,9 @@ class DlgTxFeeOptions(ArmoryDialog):
          'the Bitcoin network to process transactions and keep it secure.')
       lblDescr2 = QLabel(\
          'Nearly all transactions are guaranteed to be '
-         'processed if a fee of 0.0005 BTC is included (less than $0.01 USD).  You '
+         'processed if a fee of 0.0005 %s is included (less than $0.01 USD).  You '
          'will be prompted for confirmation if a higher fee amount is required for '
-         'your transaction.')
+         'your transaction.' % getCoinText(abbrev=True))
 
 
 ################################################################################
@@ -6086,11 +6094,12 @@ class DlgDispTxInfo(ArmoryDialog):
                'to determine which is which, and so this fields shows the sum '
                'of <b>all</b> outputs.'))
          lbls[-1].append(QLabel('Sum of Outputs:'))
-         lbls[-1].append(QLabel(coin2str(txAmt, maxZeros=1).strip() + '  BTC'))
+         lbls[-1].append(QLabel(coin2str(txAmt, maxZeros=1).strip() + '  %s' % getCoinText(abbrev=True)))
       else:
          lbls.append([])
          lbls[-1].append(self.main.createToolTipWidget(
-               'Bitcoins were either sent or received, or sent-to-self'))
+               '%s were either sent or received, or sent-to-self' \
+               % getCoinText(plural=True)))
          lbls[-1].append(QLabel('Transaction Direction:'))
          lbls[-1].append(QRichLabel(txdir))
 
@@ -6099,7 +6108,7 @@ class DlgDispTxInfo(ArmoryDialog):
                'The value shown here is the net effect on your '
                'wallet, including transaction fee.'))
          lbls[-1].append(QLabel('Transaction Amount:'))
-         lbls[-1].append(QRichLabel(coin2str(txAmt, maxZeros=1).strip() + '  BTC'))
+         lbls[-1].append(QRichLabel(coin2str(txAmt, maxZeros=1).strip() + '  %s' % getCoinText(abbrev=True)))
          if txAmt < 0:
             lbls[-1][-1].setText('<font color="red">' + lbls[-1][-1].text() + '</font> ')
          elif txAmt > 0:
@@ -6113,7 +6122,7 @@ class DlgDispTxInfo(ArmoryDialog):
             'Transaction fees go to users supplying the Bitcoin network with '
             'computing power for processing transactions and maintaining security.'))
          lbls[-1].append(QLabel('Tx Fee Paid:'))
-         lbls[-1].append(QLabel(coin2str(fee, maxZeros=0).strip() + '  BTC'))
+         lbls[-1].append(QLabel(coin2str(fee, maxZeros=0).strip() + '  %s' % getCoinText(abbrev=True)))
 
 
 
@@ -6153,7 +6162,7 @@ class DlgDispTxInfo(ArmoryDialog):
 
             rlbls[-1].append(QLabel(scrAddr_to_addrStr(sv[0])))
             if numRV > 1:
-               rlbls[-1].append(QLabel(coin2str(sv[1], maxZeros=1) + '  BTC'))
+               rlbls[-1].append(QLabel(coin2str(sv[1], maxZeros=1) + '  %s' % getCoinText(abbrev=True)))
             else:
                rlbls[-1].append(QLabel(''))
             ffixBold = GETFONT('Fixed', 10)
@@ -7131,11 +7140,12 @@ class DlgPrintBackup(ArmoryDialog):
             <b><u>Print Wallet Backup Fragments</u></b><br><br>
             When any %d of these fragments are combined, all <u>previous
             <b>and</b> future</u> addresses generated by this wallet will be
-            restored, giving you complete access to your bitcoins.  The
+            restored, giving you complete access to your %s.  The
             data can be copied by hand if a working printer is not
             available.  Please make sure that all data lines contain
             <b>9 columns</b>
-            of <b>4 characters each</b> (excluding "ID" lines).""") % M)
+            of <b>4 characters each</b> (excluding "ID" lines).""") % (M,
+                getCoinText(capitalized=False, plural=True)))
       else:
          withChain = '' if self.noNeedChaincode else 'and "Chaincode"'
          lblDescr = QRichLabel(tr("""
@@ -7414,8 +7424,8 @@ class DlgPrintBackup(ArmoryDialog):
          container = 'this wallet' if printType == 'SingleSheetFirstPage' else 'these addresses'
          warnMsg = tr("""
             <font color="#aa0000"><b>WARNING:</b></font> Anyone who has access to this
-            page has access to all the bitcoins in %s!  Please keep this
-            page in a safe place.""" % container)
+            page has access to all the %s in %s!  Please keep this
+            page in a safe place.""" % (getCoinText(capitalized=False, plural=True), container))
 
       self.scene.newLine()
       self.scene.drawText(warnMsg, GETFONT('Var', 9), wrapWidth=wrap)
@@ -8245,7 +8255,8 @@ class DlgAddressBook(ArmoryDialog):
       if self.isBrowsingOnly or selectExistingOnly:
          lblDescr = QRichLabel('Browse all receiving addresses in '
                                'this wallet, and all addresses to which this '
-                               'wallet has sent bitcoins.')
+                               'wallet has sent %s.' % \
+                                       getCoinText(capitalized=False, plural=True))
 
       lblToWlt = QRichLabel('<b>Send to Wallet:</b>')
       lblToAddr = QRichLabel('<b>Send to Address:</b>')
@@ -8817,8 +8828,9 @@ class DlgHelpAbout(ArmoryDialog):
       imgLogo.setPixmap(QPixmap(':/armory_logo_h56.png'))
       imgLogo.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
-      lblHead = QRichLabel('Armory Bitcoin Wallet : Version %s-beta' % \
-                                    getVersionString(BTCARMORY_VERSION), doWrap=False)
+      lblHead = QRichLabel('Armory %s Wallet : Version %s-beta' % \
+                                    (getCoinText(), getVersionString(BTCARMORY_VERSION)),
+                                    doWrap=False)
       lblWebpage = QRichLabel('<a href="https://www.bitcoinarmory.com">https://www.bitcoinarmory.com</a>')
       lblWebpage.setOpenExternalLinks(True)
       lblCopyright = QRichLabel(u'Copyright \xa9 2011-2014 Armory Technologies, Inc.')
@@ -8851,7 +8863,8 @@ class DlgSettings(ArmoryDialog):
       ##########################################################################
       # bitcoind-management settings
       self.chkManageSatoshi = QCheckBox(tr("""
-         Let Armory run Bitcoin-Qt/bitcoind in the background"""))
+         Let Armory run %s-Qt/%sd in the background""" % \
+                 (getCoinText(), getCoinText(capitalized=False))))
       self.edtSatoshiExePath = QLineEdit()
       self.edtSatoshiHomePath = QLineEdit()
       self.edtSatoshiExePath.setMinimumWidth(tightSizeNChar(GETFONT('Fixed', 10), 40)[0])
@@ -8872,11 +8885,12 @@ class DlgSettings(ArmoryDialog):
             sathome = self.main.settings.get('SatoshiDatadir')
 
          lblManageSatoshi = QRichLabel(\
-            '<b>Bitcoin Software Management</b>'
+            '<b>%s Software Management</b>'
             '<br><br>'
-            'By default, Armory will manage the Bitcoin engine/software in the '
+            'By default, Armory will manage the %s engine/software in the '
             'background.  You can choose to manage it yourself, or tell Armory '
-            'about non-standard installation configuration.')
+            'about non-standard installation configuration.' % (getCoinText(),
+                getCoinText()))
       if self.main.settings.hasSetting('SatoshiExe'):
          self.edtSatoshiExePath.setText(self.main.settings.get('SatoshiExe'))
          self.edtSatoshiExePath.home(False)
@@ -8884,8 +8898,8 @@ class DlgSettings(ArmoryDialog):
          self.edtSatoshiHomePath.setText(self.main.settings.get('SatoshiDatadir'))
          self.edtSatoshiHomePath.home(False)
 
-      lblDescrExe = QRichLabel('Bitcoin Install Dir:')
-      lblDescrHome = QRichLabel('Bitcoin Home Dir:')
+      lblDescrExe = QRichLabel('%s Install Dir:' % getCoinText())
+      lblDescrHome = QRichLabel('%s Home Dir:' % getCoinText())
       lblDefaultExe = QRichLabel('Leave blank to have Armory search default '
                                   'locations for your OS', size=2)
       lblDefaultHome = QRichLabel('Leave blank to use default datadir '
@@ -8946,9 +8960,9 @@ class DlgSettings(ArmoryDialog):
          logged by ATI servers.  You can continue to receive notifications 
          but not send any statistical information.""")
       lblPrivTorDescr = QRichLabel("""
-         If you are going to use Armory and Bitcoin Core with a proxy (such
+         If you are going to use Armory and %s Core with a proxy (such
          as Tor), you should disable all Armory communications that might operate 
-         outside the proxy.""")
+         outside the proxy.""" % getCoinText())
 
       self.chkPrivacyStats = QCheckBox(tr("""
          Disable OS and version reporting"""))
@@ -9058,8 +9072,8 @@ class DlgSettings(ArmoryDialog):
       lblDefaultDescr = QRichLabel(tr("""
          Fees go to users that contribute computing power to keep the
          Bitcoin network secure.  It also increases the priority of your
-         transactions so they confirm faster (%s BTC is standard).""") % \
-         coin2strNZS(MIN_TX_FEE))
+         transactions so they confirm faster (%s %s is standard).""") % \
+         (coin2strNZS(MIN_TX_FEE), getCoinText(abbrev=True)))
 
       ttipDefaultFee = self.main.createToolTipWidget(tr("""
          NOTE: some transactions will require a certain fee
@@ -9108,10 +9122,12 @@ class DlgSettings(ArmoryDialog):
          osxMinorVer = OS_VARIANT[0].split(".")[1]
 
       lblNotify = QRichLabel('<b>Enable notifcations from the system-tray:</b>')
-      self.chkBtcIn = QCheckBox('Bitcoins Received')
-      self.chkBtcOut = QCheckBox('Bitcoins Sent')
-      self.chkDiscon = QCheckBox('Bitcoin-Qt/bitcoind disconnected')
-      self.chkReconn = QCheckBox('Bitcoin-Qt/bitcoind reconnected')
+      self.chkBtcIn = QCheckBox('%s Received' % getCoinText(plural=True))
+      self.chkBtcOut = QCheckBox('%s Sent' % getCoinText(plural=True))
+      self.chkDiscon = QCheckBox('%s-Qt/%sd disconnected' % (getCoinText(),
+              getCoinText(capitalized=False)))
+      self.chkReconn = QCheckBox('%s-Qt/%sd reconnected' % (getCoinText(),
+              getCoinText(capitalized=False)))
 
       # FYI:If we're not on OS X, the if condition will never be hit.
       if (OS_MACOSX) and (int(osxMinorVer) < 7):
@@ -9464,8 +9480,8 @@ class DlgSettings(ArmoryDialog):
       except:
          QMessageBox.warning(self, 'Invalid Amount', \
             'The default fee specified could not be understood.  Please '
-            'specify in BTC with no more than 8 decimal places.', \
-            QMessageBox.Ok)
+            'specify in %s with no more than 8 decimal places.' \
+            % getCoinText(abbrev=True), QMessageBox.Ok)
          return
 
       if not self.main.setPreferredDateFormat(str(self.edtDateFormat.text())):
@@ -9537,9 +9553,9 @@ class DlgSettings(ArmoryDialog):
       if modestr.lower() == 'standard':
          strDescr += \
             ('"Standard" is for users that only need the core set of features '
-             'to send and receive bitcoins.  This includes maintaining multiple '
+             'to send and receive %s.  This includes maintaining multiple '
              'wallets, wallet encryption, and the ability to make backups '
-             'of your wallets.')
+             'of your wallets.' % getCoinText(capitalized=False, plural=True))
       elif modestr.lower() == 'advanced':
          strDescr += \
             ('"Advanced" mode provides '
@@ -9976,9 +9992,10 @@ class DlgRequestPayment(ArmoryDialog):
          'usually begin with "Click here..." to reaffirm to the user it is '
          'is clickable.')
       ttipAmount = self.main.createToolTipWidget(\
-         'All amounts are specifed in BTC')
+         'All amounts are specifed in %s', getCoinText(abbrev=True))
       ttipAddress = self.main.createToolTipWidget(\
-         'The person clicking the link will be sending bitcoins to this address')
+         'The person clicking the link will be sending %s to this address' % \
+         getCoinText(capitalized=False, plural=True))
       ttipMessage = self.main.createToolTipWidget(\
          'This will be pre-filled as the label/comment field '
          'after the user clicks the link. They '
@@ -10005,7 +10022,8 @@ class DlgRequestPayment(ArmoryDialog):
       layoutEntry.addWidget(ttipAddress, i, 2)
 
       i += 1
-      layoutEntry.addWidget(QRichLabel('<b>Request (BTC):</b>'), i, 0)
+      layoutEntry.addWidget(QRichLabel('<b>Request (%s):</b>' % getCoinText(abbrev=True)),
+                                       i, 0)
       layoutEntry.addWidget(self.edtAmount, i, 1)
 
       i += 1
@@ -10162,7 +10180,8 @@ class DlgRequestPayment(ArmoryDialog):
       self.dispText += '<br>'
       self.dispText += '<b>Pay to</b>:\t%s<br>' % addr
       if amt:
-         self.dispText += '<b>Amount</b>:\t%s BTC<br>' % coin2str(amt, maxZeros=0).strip()
+         self.dispText += '<b>Amount</b>:\t%s %s<br>' % (coin2str(amt, maxZeros=0).strip(),
+                                                         getCoinText(abbrev=True))
       if msgStr:
          self.dispText += '<b>Message</b>:\t%s<br>' % msgStr
       self.lblLink.setText(self.dispText)
@@ -10177,7 +10196,8 @@ class DlgRequestPayment(ArmoryDialog):
       self.plainText += 'If clicking on the line above does not work, use this payment info:\n'
       self.plainText += 'Pay to:  %s' % addr
       if amt:
-         self.plainText += '\nAmount:  %s BTC' % coin2str(amt, maxZeros=0).strip()
+         self.plainText += '\nAmount:  %s %s' % (coin2str(amt, maxZeros=0).strip(),
+                                                 getCoinText(abbrev=True))
       if msgStr:
          self.plainText += '\nMessage: %s' % msgStr
       self.plainText += '\n'
@@ -10930,7 +10950,7 @@ class DlgInstallLinux(ArmoryDialog):
 
       self.radioUbuntuPPA.setChecked(True)
       self.clickInstallOpt()
-      self.setWindowTitle('Install Bitcoin in Linux')
+      self.setWindowTitle('Install %s in Linux' % getCoinText(plural=True))
 
       from twisted.internet import reactor
       reactor.callLater(0.2, self.main.checkForLatestVersion)
@@ -11358,14 +11378,15 @@ class DlgSimpleBackup(ArmoryDialog):
       self.wlt = wlt
 
       lblDescrTitle = QRichLabel(tr("""
-         <b>Protect Your Bitcoins -- Make a Wallet Backup!</b>"""))
+         <b>Protect Your %s -- Make a Wallet Backup!</b>""" % getCoinText(plural=True)))
 
       lblDescr = QRichLabel(tr("""
          A failed hard-drive or forgotten passphrase will lead to
-         <u>permanent loss of bitcoins</u>!  Luckily, Armory wallets only
+         <u>permanent loss of %s</u>!  Luckily, Armory wallets only
          need to be backed up <u>one time</u>, and protect you in both
          of these events.   If you've ever forgotten a password or had
-         a hardware failure, make a backup! """))
+         a hardware failure, make a backup! """ \
+         % getCoinText(capitalized=False, plural=True)))
 
       # ## Paper
       lblPaper = QRichLabel(tr("""

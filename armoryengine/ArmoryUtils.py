@@ -362,6 +362,23 @@ NETWORKS['\x34'] = "Namecoin Network"
 DO_WALLET_CHECK = CLI_OPTIONS.forceWalletCheck or \
                   not platform.machine().lower().startswith('arm')
 
+# For displaying text to user
+def getCoinText(capitalized=True, plural=False, abbrev=False):
+   if abbrev:
+      # Ignore calpitalized, b/c the abbreviation should always be capitalized
+      # Should make dictionary with COIN as the key and abbreviation as the
+      # value
+      if COIN == 'Namecoin':
+         return 'NMC'
+      else:
+         return 'BTC'
+   ret = COIN.lower()
+   if capitalized:
+      ret = ret.capitalize()
+   if plural:
+      ret = ret + 's'
+   return ret
+
 # Version Handling Code
 def getVersionString(vquad, numPieces=4):
    vstr = '%d.%02d' % vquad[:2]
