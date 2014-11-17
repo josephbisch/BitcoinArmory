@@ -1497,7 +1497,7 @@ class Armory_Json_Rpc_Server(jsonrpc.JSONRPC):
                'difficulty':        TheBDM.getTopBlockDifficulty() \
                                     if isReady else -1,
                'testnet':           USE_TESTNET or USE_NAMECOIN_TESTNET,
-               'chain':             COIN
+               'chain':             COIN,
                'keypoolsize':       self.curWlt.addrPoolSize
              }
 
