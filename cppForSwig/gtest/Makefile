@@ -49,7 +49,7 @@ CXXFLAGS += -g -std=c++11
 
 # All tests produced by this Makefile.  Remember to add new tests you
 # created to the list.
-TESTS = CppBlockUtilsTests
+TESTS = CppBlockUtilsTests NamecoinTests
 
 # All Google Test headers.  Usually you shouldn't change this
 # definition.
@@ -112,10 +112,16 @@ endif
 CppBlockUtilsTests.o : CppBlockUtilsTests.cpp $(HEADERS) $(GTEST_HEADERS) ../../_CppBlockUtils.so
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c CppBlockUtilsTests.cpp
 
+NamecoinTests.o : NamecoinTests.cpp $(HEADERS) $(GTEST_HEADERS) ../../_CppBlockUtils.so
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c NamecoinTests.cpp
+
 getScrAddrData.o : getScrAddrData.cpp $(HEADERS) $(GTEST_HEADERS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c getScrAddrData.cpp 
 
 CppBlockUtilsTests : $(OBJECTS) CppBlockUtilsTests.o gtest.a ../libcryptopp.a
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wl,-rpath,$(PWD)/../.. ../libcryptopp.a $^ ../../_CppBlockUtils.so -lpthread $(PYTHON_LDFLAGS) ../../_CppBlockUtils.so -o $@
+
+NamecoinTests : $(OBJECTS) NamecoinTests.o gtest.a ../libcryptopp.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -Wl,-rpath,$(PWD)/../.. ../libcryptopp.a $^ ../../_CppBlockUtils.so -lpthread $(PYTHON_LDFLAGS) ../../_CppBlockUtils.so -o $@
 
 getScrAddrData : $(OBJECTS) getScrAddrData.o 
