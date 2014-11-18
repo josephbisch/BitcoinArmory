@@ -9979,9 +9979,10 @@ class DlgRequestPayment(ArmoryDialog):
 
       lblDescr = QRichLabel(\
          'Create a clickable link that you can copy into email or webpage to '
-         'request a payment.   If the user is running a Bitcoin program '
-         'that supports "bitcoin:" links, that program will open with '
-         'all this information pre-filled after they click the link.')
+         'request a payment.   If the user is running a %s program '
+         'that supports "%s:" links, that program will open with '
+         'all this information pre-filled after they click the link.' % \
+                 (getCoinText(), getCoinText(capitalized=False)))
 
       lblDescr.setContentsMargins(5, 5, 5, 5)
       frmDescr = makeHorizFrame([lblDescr], STYLE_SUNKEN)
@@ -9991,6 +9992,11 @@ class DlgRequestPayment(ArmoryDialog):
          'The following Bitcoin desktop applications <i>try</i> to '
          'register themselves with your computer to handle "bitcoin:" '
          'links: Armory, Multibit, Electrum')
+      if COIN=='Namecoin':
+         ttipPreview = self.main.createToolTipWidget(\
+            'The following Namecoin desktop applications <i>try</i> to '
+            'register themselves with your computer to handle "namecoin:" '
+            'links: Armory')
       ttipLinkText = self.main.createToolTipWidget(\
          'This is the text to be shown as the clickable link.  It should '
          'usually begin with "Click here..." to reaffirm to the user it is '
@@ -10532,14 +10538,15 @@ class DlgUriCopyAndPaste(ArmoryDialog):
 
       self.uriDict = {}
       lblDescr = QRichLabel('Copy and paste a raw bitcoin URL string here.  '
-                            'A valid string starts with "bitcoin:" followed '
-                            'by a bitcoin address.'
+                            'A valid string starts with "%s:" followed '
+                            'by a %s address.'
                             '<br><br>'
-                            'You should use this feature if there is a "bitcoin:" '
+                            'You should use this feature if there is a "%s:" '
                             'link in a webpage or email that does not load Armory '
                             'when you click on it.  Instead, right-click on the '
                             'link and select "Copy Link Location" then paste it '
-                            'into the box below. ')
+                            'into the box below. ' % (getCoinText(capitalized=False),
+                                getCoinText(), getCoinText(capitalized=False)))
 
       lblShowExample = QLabel()
       lblShowExample.setPixmap(QPixmap(':/armory_rightclickcopy.png'))

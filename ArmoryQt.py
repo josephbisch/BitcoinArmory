@@ -5273,7 +5273,7 @@ class ArmoryMainWindow(QMainWindow):
          <a href="https://bitcoinarmory.com/using-our-wallet">Armory
          Quick Start Guide</a>, and the
          <a href="https://bitcoinarmory.com/using-our-wallet/#offlinewallet">Offline
-         Wallet Tutorial</a>.<br><br> """ % getCoinText(), getCoinText(capitalized=False, plural=True))
+         Wallet Tutorial</a>.<br><br> """ % (getCoinText(), getCoinText(capitalized=False, plural=True)))
       elif state == 'OnlineFull1':
          return ( \
          '<p><b>You now have access to all the features Armory has to offer!</b><br>'

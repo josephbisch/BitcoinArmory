@@ -146,11 +146,11 @@ class SendBitcoinsFrame(ArmoryFrame):
          
       txFrm = makeHorizFrame(componentList, condenseMargins=True)
 
-      btnEnterURI = QPushButton('Manually Enter "bitcoin:" Link')
+      btnEnterURI = QPushButton('Manually Enter "%s:" Link' % getCoinText(capitalized=False))
       ttipEnterURI = self.main.createToolTipWidget( tr("""
          Armory does not always succeed at registering itself to handle 
          URL links from webpages and email.  
-         Click this button to copy a "bitcoin:" link directly into Armory."""))
+         Click this button to copy a "%s:" link directly into Armory.""" % getCoinText(capitalized=False)))
       self.connect(btnEnterURI, SIGNAL("clicked()"), self.clickEnterURI)
       fromFrameList = [self.frmSelectedWlt]
       if not(USE_TESTNET or USE_NAMECOIN or USE_NAMECOIN_TESTNET):
@@ -269,7 +269,7 @@ class SendBitcoinsFrame(ArmoryFrame):
             <i>Armory</i> is the result of thousands of hours of development 
             by very talented coders.  Yet, this software 
             has been given to you for free to benefit the greater Bitcoin 
-            community! 
+            and Namecoin communities! 
             <br><br>
             If you are satisfied with this software, please consider 
             donating what you think this software would be worth as a commercial 
@@ -321,7 +321,7 @@ class SendBitcoinsFrame(ArmoryFrame):
          self.btnSend.setToolTip('Click to create an unsigned transaction!')
       else:
          self.btnSend.setText('Send!')
-         self.btnSend.setToolTip('Click to send bitcoins!')
+         self.btnSend.setToolTip('Click to send %s!' % getCoinText(capitalized=False))
       
 
    #############################################################################
@@ -480,8 +480,9 @@ class SendBitcoinsFrame(ArmoryFrame):
             value = str2coin(valueStr, negAllowed=False)
             if value == 0:
                QMessageBox.critical(self, 'Zero Amount', \
-                  'You cannot send 0 BTC to any recipients.  <br>Please enter '
-                  'a positive amount for recipient %d.' % (row+1), QMessageBox.Ok)
+                  'You cannot send 0 %s to any recipients.  <br>Please enter '
+                  'a positive amount for recipient %d.' % \
+                          (getCoinText(abbrev=True), row+1), QMessageBox.Ok)
                return False
 
          except NegativeValueError:
@@ -492,8 +493,8 @@ class SendBitcoinsFrame(ArmoryFrame):
          except TooMuchPrecisionError:
             QMessageBox.critical(self, 'Too much precision', \
                'Bitcoins can only be specified down to 8 decimal places. '
-               'The smallest value that can be sent is  0.0000 0001 BTC. '
-               'Please enter a new amount for recipient %d.' % (row + 1), QMessageBox.Ok)
+               'The smallest value that can be sent is  0.0000 0001 %s. '
+               'Please enter a new amount for recipient %d.' % (getCoinText(abbrev=True), row + 1), QMessageBox.Ok)
             return False
          except ValueError:
             QMessageBox.critical(self, 'Missing recipient amount', \
@@ -554,15 +555,18 @@ class SendBitcoinsFrame(ArmoryFrame):
          return False
       except TooMuchPrecisionError:
          QMessageBox.critical(self, tr('Too much precision'), tr("""
-            Bitcoins can only be specified down to 8 decimal places. 
-            The smallest unit of a Bitcoin is 0.0000 0001 BTC. 
-            Please enter a fee of at least 0.0000 0001"""), QMessageBox.Ok)
+            %s can only be specified down to 8 decimal places. 
+            The smallest unit of a %s is 0.0000 0001 %s. 
+            Please enter a fee of at least 0.0000 0001""" % \
+                    (getCoinText(capitalized=False),
+                        getCoinText(capitalized=False),
+                        getCoinText(abbrev=True))), QMessageBox.Ok)
          return False
       except:
          QMessageBox.critical(self, tr('Invalid Fee String'), tr("""
             The fee you specified is invalid.  A standard fee is 
-            0.0001 BTC, though some transactions may succeed with 
-            zero fee."""), QMessageBox.Ok)
+            0.0001 %s, though some transactions may succeed with 
+            zero fee.""" % getCoinText(abbrev=True)), QMessageBox.Ok)
          LOGERROR(tr('Invalid fee specified: "%s"') % feeStr)
          return False
 
@@ -573,14 +577,16 @@ class SendBitcoinsFrame(ArmoryFrame):
          valMax = coin2str(bal, maxZeros=2).strip()
          if self.altBalance == None:
             QMessageBox.critical(self, tr('Insufficient Funds'), tr("""
-            You just tried to send more Bitcoins than you have available. You only 
-            have %s BTC (spendable) in this wallet!""") % \
-            valMax, QMessageBox.Ok)
+            You just tried to send more %s than you have available. You only 
+            have %s %s (spendable) in this wallet!""") % \
+            (getCoinText(capitalized=False, plural=True), valMax,
+                getCoinText(abbrev=True)), QMessageBox.Ok)
          else:
             QMessageBox.critical(self, tr('Insufficient Funds'), tr("""
-            You just tried to send more Bitcoins than you have available. You only 
-            have %s BTC with this coin control selection!""") % \
-            valMax, QMessageBox.Ok)
+            You just tried to send more %s than you have available. You only 
+            have %s %s with this coin control selection!""") % \
+            (getCoinText(capitalized=False, plural=True), valMax,
+                getCoinText(abbrev=True)), QMessageBox.Ok)
          return False
 
       # Iteratively calculate the minimum fee by first trying the user selected
@@ -611,11 +617,12 @@ class SendBitcoinsFrame(ArmoryFrame):
 
       if minFee > 99*MIN_RELAY_TX_FEE:
          QMessageBox.critical(self, tr('Minimum Transaction Fee Is Too Large'), tr("""
-            The minimum fee for this transaction is <b>%s BTC</b>. That fee is too
+            The minimum fee for this transaction is <b>%s %s</b>. That fee is too
             large and indicates that there are probably too many small inputs to fit
-            into a single transaction. To send these Bitcoins, this transaction must
+            into a single transaction. To send these %s, this transaction must
             be broken up into to smaller pieces.            
-            """) % coin2strNZS(minFee), QMessageBox.Ok)
+            """) % (coin2strNZS(minFee), getCoinText(abbrev=True),
+                getCoinText(capitalized=False, plural=True)), QMessageBox.Ok)
          return False
          
       # We now have a min-fee that we know we can match if the user agrees
@@ -631,22 +638,24 @@ class SendBitcoinsFrame(ArmoryFrame):
             QMessageBox.warning(self, tr('Insufficient Balance'), tr("""
                The required transaction fee causes this transaction to exceed 
                your balance.  In order to send this transaction, you will be 
-               required to pay a fee of <b>%s BTC</b>. 
+               required to pay a fee of <b>%s %s</b>. 
                <br><br>
                Please go back and adjust the value of your transaction, not 
-               to exceed a total of <b>%s BTC</b> (the necessary fee has 
+               to exceed a total of <b>%s %s</b> (the necessary fee has 
                been entered into the form, so you can use the "MAX" button 
                to enter the remaining balance for a recipient).""") % \
-               (minFeeStr, newBalStr), QMessageBox.Ok)
+               (minFeeStr, getCoinText(abbrev=True), newBalStr,
+                   getCoinText(abbrev=True)), QMessageBox.Ok)
             return
 
          reply = QMessageBox.warning(self, tr('Insufficient Fee'), tr("""
-            The fee you have specified (%s BTC) is insufficient for the 
+            The fee you have specified (%s %s) is insufficient for the 
             size and priority of your transaction.  You must include at 
-            least %s BTC to send this transaction. 
+            least %s %s to send this transaction. 
             <br><br> 
-            Do you agree to the fee of %s BTC?""") % \
-            (usrFeeStr, minFeeStr, minFeeStr), \
+            Do you agree to the fee of %s %s?""") % \
+            (usrFeeStr, getCoinText(abbrev=True), minFeeStr,
+                getCoinText(abbrev=True), minFeeStr, getCoinText(abbrev=True)), \
             QMessageBox.Yes | QMessageBox.Cancel)
 
          if reply == QMessageBox.Cancel:
@@ -660,14 +669,16 @@ class SendBitcoinsFrame(ArmoryFrame):
       # Warn user of excessive fee specified
       if fee > 100*MIN_RELAY_TX_FEE or (minFee > 0 and fee > 10*minFee):
          reply = QMessageBox.warning(self, tr('Excessive Fee'), tr("""
-            You have specified a fee of <b>%s BTC</b> which is much higher
-            than the minimum fee required for this transaction: <b>%s BTC</b>.
+            You have specified a fee of <b>%s %s</b> which is much higher
+            than the minimum fee required for this transaction: <b>%s %s</b>.
             Are you <i>absolutely sure</i> that you want to send with this
             fee?  
             <br><br>
             If you do not want this fee, click "No" and then change the fee
-            at the bottom of the "Send Bitcoins" window before trying 
-            again.""") % (coin2strNZS(fee), coin2strNZS(minFee)), QMessageBox.Yes | QMessageBox.No)
+            at the bottom of the "Send %s" window before trying 
+            again.""") % (coin2strNZS(fee), getCoinText(abbrev=True),
+                coin2strNZS(minFee), getCoinText(abbrev=True),
+                getCoinText(plural=True)), QMessageBox.Yes | QMessageBox.No)
 
          if not reply==QMessageBox.Yes:
             return False
@@ -676,9 +687,9 @@ class SendBitcoinsFrame(ArmoryFrame):
       if len(utxoSelect) == 0:
          QMessageBox.critical(self, tr('Coin Selection Error'), tr("""
             There was an error constructing your transaction, due to a 
-            quirk in the way Bitcoin transactions work.  If you see this
-            error more than once, try sending your BTC in two or more 
-            separate transactions."""), QMessageBox.Ok)
+            quirk in the way %s transactions work.  If you see this
+            error more than once, try sending your %s in two or more 
+            separate transactions.""" % getCoinText(), getCoinText(abbrev=True)), QMessageBox.Ok)
          return False
 
       # ## IF we got here, everything is good to go...
@@ -1003,7 +1014,7 @@ class SendBitcoinsFrame(ArmoryFrame):
          self.widgetTable[r]['QLE_AMT'].setMaximumHeight(self.maxHeight)
          self.widgetTable[r]['QLE_AMT'].setAlignment(Qt.AlignLeft)
 
-         self.widgetTable[r]['LBL_BTC'] = QLabel('BTC')
+         self.widgetTable[r]['LBL_BTC'] = QLabel(getCoinText(abbrev=True))
          self.widgetTable[r]['LBL_BTC'].setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
 
          self.widgetTable[r]['BTN_MAX'] = \
@@ -1242,7 +1253,7 @@ class ReviewOfflineTxFrame(ArmoryDialog):
             just requested, but is invalid because it does not contain any
             signatures.  You must take this data to the computer with the 
             full wallet to get it signed, then bring it back here to be
-            broadcast to the Bitcoin network.
+            broadcast to the %s network.
             <br><br>
             Use "Save as file..." to save an <i>*.unsigned.tx</i> 
             file to USB drive or other removable media.  
@@ -1254,7 +1265,7 @@ class ReviewOfflineTxFrame(ArmoryDialog):
             <b>NOTE:</b> The USB drive only ever holds public transaction
             data that will be broadcast to the network.  This data may be 
             considered privacy-sensitive, but does <u>not</u> compromise
-            the security of your wallet."""))
+            the security of your wallet.""" % getCoinText()))
       else:
          self.lblDescr.setText(tr("""
             You have chosen to create the previous transaction but not sign 
@@ -1472,7 +1483,7 @@ class SignBroadcastOfflineTxFrame(ArmoryFrame):
             self.btnBroadcast.setEnabled(True)
          else:
             self.btnBroadcast.setEnabled(False)
-            self.btnBroadcast.setToolTip('No connection to Bitcoin network!')
+            self.btnBroadcast.setToolTip('No connection to %s network!' % getCoinText())
 
       self.btnSave.setEnabled(True)
       self.btnCopyHex.setEnabled(False)
@@ -1596,7 +1607,7 @@ class SignBroadcastOfflineTxFrame(ArmoryFrame):
 
          ##### 3
          if self.leValue:
-            self.infoLbls[3][2].setText(coin2strNZS(self.leValue) + '  BTC')
+            self.infoLbls[3][2].setText(coin2strNZS(self.leValue) + '  %s' % getCoinText(abbrev=True))
          else:
             self.infoLbls[3][2].setText('')
 
@@ -1709,16 +1720,18 @@ class SignBroadcastOfflineTxFrame(ArmoryFrame):
    def broadTx(self):
       if self.main.netMode == NETWORKMODE.Disconnected:
          QMessageBox.warning(self, 'No Internet!', \
-            'Armory lost its connection to Bitcoin-Qt, and cannot '
+            'Armory lost its connection to %s-Qt, and cannot '
             'broadcast any transactions until it is reconnected. '
-            'Please verify that Bitcoin-Qt (or bitcoind) is open '
-            'and synchronized with the network.', QMessageBox.Ok)
+            'Please verify that %s-Qt (or %sd) is open '
+            'and synchronized with the network.' % (getCoinText(), getCoinText(),
+                getCoinText(capitalized=False)), QMessageBox.Ok)
          return
       elif self.main.netMode == NETWORKMODE.Offline:
          QMessageBox.warning(self, 'No Internet!', \
-            'You do not currently have a connection to the Bitcoin network. '
-            'If this does not seem correct, verify that Bitcoin-Qt is open '
-            'and synchronized with the network.', QMessageBox.Ok)
+            'You do not currently have a connection to the %s network. '
+            'If this does not seem correct, verify that %s-Qt is open '
+            'and synchronized with the network.' % (getCoinText(),
+                getCoinText()), QMessageBox.Ok)
          return
 
 
