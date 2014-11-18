@@ -147,7 +147,8 @@ class UpgradeDownloader:
                         QMessageBox.Ok)
                   else:
                      if OS_LINUX and \
-                        self.packageName=='Satoshi' and \
+                        (self.packageName=='Satoshi' or \
+                        self.packageName=='Namecoin') and \
                         dest.endswith('tar.gz'):
                         linuxUnpackFile = dest
                      else:
@@ -266,6 +267,7 @@ class UpgradeDownloaderDialog(ArmoryDialog):
          "32" : tr("32-bit"), \
          "64" : tr("64-bit"), \
          "Satoshi" : tr("Bitcoin Core"), \
+         "Namecoin" : tr("Namecoin Core"), \
          "ArmoryTesting" : tr("Armory Testing (unstable)"), \
          "ArmoryOffline" : tr("Offline Armory Wallet") \
       }
@@ -397,6 +399,8 @@ class UpgradeDownloaderDialog(ArmoryDialog):
          expectVer = self.main.armoryVersions[1]
       elif showPackage == 'Satoshi':
          expectVer = self.main.satoshiVersions[1]
+      elif showPackage == 'Namecoin':
+         expectVer = self.main.namecoinVersions[1]
 
       # This is currently broken... will have to fix later
       #if showPackage:
@@ -551,6 +555,13 @@ class UpgradeDownloaderDialog(ArmoryDialog):
                   core Bitcoin software downloads. You can find the
                   information at:
                   <a href='https://bitcoin.org/en/version-history'>https://bitcoin.org/en/version-history</a>""")
+            elif packagename == "Namecoin":
+               logHtml = tr("""
+                  No version information is available here for any of the
+                  core Namecoin software downloads. You can find the
+                  information at:
+                  <a href='https://github.com/namecoin/namecoin/blob/namecoinq-release/changelog.md'>
+                  https://github.com/namecoin/namecoin/blob/namecoinq-release/changelog.md</a>""")
             else:
                logHtml = tr("Release notes are not available for this package")
 
@@ -712,6 +723,11 @@ class UpgradeDownloaderDialog(ArmoryDialog):
                self.lblCurrentVersion.setText(tr("""
                   You are currently using Bitcoin Core version %s""") % \
                   self.main.satoshiVersions[0])
+         elif pkgName=='Namecoin':
+            if self.main.namecoinVersions[0]:
+               self.lblCurrentVersion.setText(tr("""
+                  You are currently using Namecoin Core version %s""") % \
+                  self.main.namecoinVersions[0])
          elif pkgName=='Armory':
             if self.main.armoryVersions[0]:
                self.lblCurrentVersion.setText(tr("""

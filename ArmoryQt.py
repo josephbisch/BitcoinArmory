@@ -178,6 +178,7 @@ class ArmoryMainWindow(QMainWindow):
       self.notifyIgnoreShort = []
       self.maxPriorityID = None
       self.satoshiVersions = ['','']  # [curr, avail]
+      self.namecoinVersions = ['',''] # [curr, avail]
       self.armoryVersions = [getVersionString(BTCARMORY_VERSION), '']
       self.NetworkingFactory = None
       self.tempModulesDirName = None
@@ -4572,13 +4573,18 @@ class ArmoryMainWindow(QMainWindow):
          No version information is available"""), doWrap=False)
       self.icoSatoshiSWVersion = QLabel('')
       self.lblSatoshiSWVersion = QRichLabel('', doWrap=False)
+      self.icoNamecoinSWVersion = QLabel('')
+      self.lblNamecoinSWVersion = QRichLabel('', doWrap=False)
 
-      self.btnSecureDLArmory  = QPushButton(tr('Secure Downloader'))
-      self.btnSecureDLSatoshi = QPushButton(tr('Secure Downloader'))
+      self.btnSecureDLArmory   = QPushButton(tr('Secure Downloader'))
+      self.btnSecureDLSatoshi  = QPushButton(tr('Secure Downloader'))
+      self.btnSecureDLNamecoin = QPushButton(tr('Secure Downloader'))
       self.btnSecureDLArmory.setVisible(False)
       self.btnSecureDLSatoshi.setVisible(False)
+      self.btnSecureDLNamecoin.setVisible(False)
       self.connect(self.btnSecureDLArmory, SIGNAL(CLICKED), self.openDLArmory)
       self.connect(self.btnSecureDLSatoshi, SIGNAL(CLICKED), self.openDLSatoshi)
+      self.connect(self.btnSecureDLNamecoin, SIGNAL(CLICKED), self.openDLNamecoin)
 
 
       frmVersions = QFrame()
@@ -4586,9 +4592,14 @@ class ArmoryMainWindow(QMainWindow):
       layoutVersions.addWidget(self.icoArmorySWVersion, 0,0)
       layoutVersions.addWidget(self.lblArmorySWVersion, 0,1)
       layoutVersions.addWidget(self.btnSecureDLArmory,  0,2)
-      layoutVersions.addWidget(self.icoSatoshiSWVersion, 1,0)
-      layoutVersions.addWidget(self.lblSatoshiSWVersion, 1,1)
-      layoutVersions.addWidget(self.btnSecureDLSatoshi,  1,2)
+      if COIN=='Namecoin':
+         layoutVersions.addWidget(self.icoNamecoinSWVersion, 1,0)
+         layoutVersions.addWidget(self.lblNamecoinSWVersion, 1,1)
+         layoutVersions.addWidget(self.btnSecureDLNamecoin,  1,2)
+      else:
+         layoutVersions.addWidget(self.icoSatoshiSWVersion, 1,0)
+         layoutVersions.addWidget(self.lblSatoshiSWVersion, 1,1)
+         layoutVersions.addWidget(self.btnSecureDLSatoshi,  1,2)
       layoutVersions.setColumnStretch(0,0)
       layoutVersions.setColumnStretch(1,1)
       layoutVersions.setColumnStretch(2,0)
@@ -4684,6 +4695,12 @@ class ArmoryMainWindow(QMainWindow):
       if not dl is None and not cl is None:
          UpgradeDownloaderDialog(self, self, 'Satoshi', dl, cl).exec_()
 
+   #############################################################################
+   def openDLNamecoin(self):
+      dl,cl = self.getDownloaderData()
+      if not dl is None and not cl is None:
+         UpgradeDownloaderDialog(self, self, 'Namecoin', dl, cl).exec_()
+
 
    #############################################################################
    def getDownloaderData(self):
@@ -4727,6 +4744,7 @@ class ArmoryMainWindow(QMainWindow):
 
       iconArmory   = ':/armory_icon_32x32.png'
       iconSatoshi  = ':/bitcoinlogo.png'
+      iconNamecoin = ':/namecoinlogo.png'
       iconInfoFile = ':/MsgBox_info48.png'
       iconGoodFile = ':/MsgBox_good48.png'
       iconWarnFile = ':/MsgBox_warning48.png'
@@ -4751,6 +4769,7 @@ class ArmoryMainWindow(QMainWindow):
       # Notify of Armory updates
       self.icoArmorySWVersion.setPixmap(QPixmap(iconArmory).scaled(24,24))
       self.icoSatoshiSWVersion.setPixmap(QPixmap(iconSatoshi).scaled(24,24))
+      self.icoNamecoinSWVersion.setPixmap(QPixmap(iconNamecoin).scaled(24,24))
 
       try:
          armCurrent = verStrToInt(self.armoryVersions[0])
@@ -4775,60 +4794,108 @@ class ArmoryMainWindow(QMainWindow):
             version %s""") % getVersionString(BTCARMORY_VERSION))
 
 
-      try:
-         satCurrStr,satLastStr = self.satoshiVersions
-         satCurrent = verStrToInt(satCurrStr) if satCurrStr else 0
-         satLatest  = verStrToInt(satLastStr) if satLastStr else 0
+      if COIN=='Namecoin':
+         try:
+            nameCurrStr,nameLastStr = self.namecoinVersions
+            nameCurrent = verStrToInt(nameCurrStr) if nameCurrStr else 0
+            nameLatest  = verStrToInt(nameLastStr) if nameLastStr else 0
 
-      # Show CoreBTC updates
-         if satCurrent and satLatest:
-            if satCurrent >= satLatest:
+            # Show CoreNMC updates
+            if nameCurrent and nameLatest:
+               if nameCurrent >= nameLatest:
+                  dispIcon = QPixmap(iconGoodFile).scaled(24,24)
+                  self.btnSecureDLNamecoin.setVisible(False)
+                  self.icoNamecoinSWVersion.setPixmap(dispIcon)
+                  self.lblNamecoinSWVersion.setText(tr(""" You are using
+                     the latest version of core Namecoin (%s)""") % nameCurrStr)
+               else:
+                  dispIcon = QPixMap(iconWarnFile).scaled(24,24)
+                  self.btnSecureDLNamecoin.setVisible(True)
+                  self.icoNamecoinSWVersion.setPixmap(dispIcon)
+                  self.lblNamecoinSWVersion.setText(tr("""
+                     <b>There is a newer version of the core Namecoin software
+                     available!</b>"""))
+            elif nameCurrent:
+               # nameLatest is not available
+               dispIcon = QPixmap(iconGoodFile).scaled(24,24)
+               self.btnSecureDLNamecoin.setVisible(False)
+               self.icoNamecoinSWVersion.setPixmap(None)
+               self.lblNamecoinSWVersion.setText(tr(""" You are using
+                  core Namecoin version %s""") % nameCurrStr)
+            elif nameLatest:
+               # only nameLatest is avail (maybe offline)
+               dispIcon = QPixmap(iconNamecoin).scaled(24,24)
+               self.btnSecureDLNamecoin.setVisible(True)
+               self.icoNamecoinSWVersion.setPixmap(dispIcon)
+               self.lblNamecoinSWVersion.setText(tr("""Core Namecoin version
+                  %s is available.""") % nameLastStr)
+            else:
+               # only nameLatest is avail (maybe offline)
+               dispIcon = QPixmap(iconNamecoin).scaled(24,24)
+               self.btnSecureDLNamecoin.setVisible(False)
+               self.icoNamecoinSWVersion.setPixmap(dispIcon)
+               self.lblNamecoinSWVersion.setText(tr("""No version information
+                  is available for core Namecoin""") )
+         except:
+            LOGEXCEPT('Failed to process namecoin versions')
+
+
+
+      else:
+         try:
+            satCurrStr,satLastStr = self.satoshiVersions
+            satCurrent = verStrToInt(satCurrStr) if satCurrStr else 0
+            satLatest  = verStrToInt(satLastStr) if satLastStr else 0
+
+            # Show CoreBTC updates
+            if satCurrent and satLatest:
+               if satCurrent >= satLatest:
+                  dispIcon = QPixmap(iconGoodFile).scaled(24,24)
+                  self.btnSecureDLSatoshi.setVisible(False)
+                  self.icoSatoshiSWVersion.setPixmap(dispIcon)
+                  self.lblSatoshiSWVersion.setText(tr(""" You are using
+                     the latest version of core Bitcoin (%s)""") % satCurrStr)
+               else:
+                  dispIcon = QPixmap(iconWarnFile).scaled(24,24)
+                  self.btnSecureDLSatoshi.setVisible(True)
+                  self.icoSatoshiSWVersion.setPixmap(dispIcon)
+                  self.lblSatoshiSWVersion.setText(tr("""
+                     <b>There is a newer version of the core Bitcoin software
+                     available!</b>"""))
+            elif satCurrent:
+               # satLatest is not available
                dispIcon = QPixmap(iconGoodFile).scaled(24,24)
                self.btnSecureDLSatoshi.setVisible(False)
-               self.icoSatoshiSWVersion.setPixmap(dispIcon)
+               self.icoSatoshiSWVersion.setPixmap(None)
                self.lblSatoshiSWVersion.setText(tr(""" You are using
-                  the latest version of core Bitcoin (%s)""") % satCurrStr)
-            else:
-               dispIcon = QPixmap(iconWarnFile).scaled(24,24)
+                  core Bitcoin version %s""") % satCurrStr)
+            elif satLatest:
+               # only satLatest is avail (maybe offline)
+               dispIcon = QPixmap(iconSatoshi).scaled(24,24)
                self.btnSecureDLSatoshi.setVisible(True)
                self.icoSatoshiSWVersion.setPixmap(dispIcon)
-               self.lblSatoshiSWVersion.setText(tr("""
-                  <b>There is a newer version of the core Bitcoin software
-                  available!</b>"""))
-         elif satCurrent:
-            # satLatest is not available
-            dispIcon = QPixmap(iconGoodFile).scaled(24,24)
-            self.btnSecureDLSatoshi.setVisible(False)
-            self.icoSatoshiSWVersion.setPixmap(None)
-            self.lblSatoshiSWVersion.setText(tr(""" You are using
-               core Bitcoin version %s""") % satCurrStr)
-         elif satLatest:
-            # only satLatest is avail (maybe offline)
-            dispIcon = QPixmap(iconSatoshi).scaled(24,24)
-            self.btnSecureDLSatoshi.setVisible(True)
-            self.icoSatoshiSWVersion.setPixmap(dispIcon)
-            self.lblSatoshiSWVersion.setText(tr("""Core Bitcoin version
-               %s is available.""") % satLastStr)
-         else:
-            # only satLatest is avail (maybe offline)
-            dispIcon = QPixmap(iconSatoshi).scaled(24,24)
-            self.btnSecureDLSatoshi.setVisible(False)
-            self.icoSatoshiSWVersion.setPixmap(dispIcon)
-            self.lblSatoshiSWVersion.setText(tr("""No version information
-               is available for core Bitcoin""") )
+               self.lblSatoshiSWVersion.setText(tr("""Core Bitcoin version
+                  %s is available.""") % satLastStr)
+            else:
+               # only satLatest is avail (maybe offline)
+               dispIcon = QPixmap(iconSatoshi).scaled(24,24)
+               self.btnSecureDLSatoshi.setVisible(False)
+               self.icoSatoshiSWVersion.setPixmap(dispIcon)
+               self.lblSatoshiSWVersion.setText(tr("""No version information
+                  is available for core Bitcoin""") )
 
 
 
 
-         #self.btnSecureDLSatoshi.setVisible(False)
-         #if self.satoshiVersions[0]:
-            #self.lblSatoshiSWVersion.setText(tr(""" You are running
-               #core Bitcoin software version %s""") % self.satoshiVersions[0])
-         #else:
-            #self.lblSatoshiSWVersion.setText(tr("""No information is
-            #available for the core Bitcoin software"""))
-      except:
-         LOGEXCEPT('Failed to process satoshi versions')
+            #self.btnSecureDLSatoshi.setVisible(False)
+            #if self.satoshiVersions[0]:
+               #self.lblSatoshiSWVersion.setText(tr(""" You are running
+                  #core Bitcoin software version %s""") % self.satoshiVersions[0])
+            #else:
+               #self.lblSatoshiSWVersion.setText(tr("""No information is
+               #available for the core Bitcoin software"""))
+         except:
+            LOGEXCEPT('Failed to process satoshi versions')
 
 
       self.updateAnnounceTable()
