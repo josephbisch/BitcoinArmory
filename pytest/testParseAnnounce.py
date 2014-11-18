@@ -111,6 +111,9 @@ Satoshi 0.9.0 Windows XP,Vista,7,8 32,64 http://btc.org/win0.9.0.exe   837f6cb49
 Satoshi 0.9.0 Ubuntu  10.04        32    http://btc.org/lin0.9.0.deb   2aa3f763c3b
 Satoshi 0.9.0 Ubuntu  10.04        64    http://btc.org/lin0.9.0.deb   2aa3f763c3b
 
+# Windows 32/64-bit Namecoin (Namecoin-Qt/namecoind)
+Namecoin 0.3.76 Windows XP,Vista,7,8 32,64 http://namecoin.info/files/Namecoin_v0.3.76_setup.exe 63769b87a3f779a2f6b330817f7d0777de475ebe04b26d24d1671df1ed7db6fb
+
 -----BEGIN BITCOIN SIGNATURE-----
 
 HAZGhRr4U/utHgk9BZVOTqWcAodtHLuIq67TMSdThAiZwcfpdjnYZ6ZwmkUj0c3W
@@ -252,6 +255,10 @@ class parseDownloadTest(TiabTest):
       dllink = self.dl.getDownloadLink('Satoshi','0.9.0','Windows','7','64')
       self.assertEqual(dllink, ['http://btc.org/win0.9.0.exe',
             '837f6cb4981314b323350353e1ffed736badb1c8c0db083da4e5dfc0dd47cdf1'])
+
+      dllink = self.dl.getDownloadLink('Namecoin','0.3.76','Windows','7','64')
+      self.assertEqual(dllink, ['http://namecoin.info/files/Namecoin_v0.3.76_setup.exe',
+            '63769b87a3f779a2f6b330817f7d0777de475ebe04b26d24d1671df1ed7db6fb'])
 
       dllink = self.dl.getDownloadLink('ArmoryOffline','0.88','Ubuntu','10.04','32')
       self.assertEqual(dllink, ['http://url/offbundle-32-88.tar.gz', '641382c93b9'])
