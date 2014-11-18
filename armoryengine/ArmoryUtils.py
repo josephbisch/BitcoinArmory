@@ -250,11 +250,13 @@ USE_NAMECOIN = CLI_OPTIONS.namecoin
 USE_NAMECOIN_TESTNET = CLI_OPTIONS.namecoinTestnet
 
 COIN = 'Bitcoin'
+DOWNLOAD_URL = 'http://www.bitcoin.org'
 if USE_NAMECOIN or USE_NAMECOIN_TESTNET:
    MIN_TX_FEE = 500000
    MIN_RELAY_TX_FEE = 100000
    COIN = 'Namecoin'
    CLI_OPTIONS.disableTorrent = True
+   DOWNLOAD_URL = 'http://www.namecoin.info'
 
 # Set default port for inter-process communication
 if CLI_OPTIONS.interport < 0:

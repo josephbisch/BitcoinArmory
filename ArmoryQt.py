@@ -1058,9 +1058,10 @@ class ArmoryMainWindow(QMainWindow):
          be cleared allowing you to retry any stuck transactions.""")
       if not self.doAutoBitcoind:
          msg += tr("""
-         <br><br>Make sure you also restart Bitcoin-Qt
-         (or bitcoind) and let it synchronize again before you restart
-         Armory.  Doing so will clear its memory pool, as well""")
+         <br><br>Make sure you also restart %s-Qt
+         (or %sd) and let it synchronize again before you restart
+         Armory.  Doing so will clear its memory pool, as well""" % 
+         (getCoinText(), getCoinText(capitalized=False)))
       QMessageBox.information(self, tr('Memory Pool'), msg, QMessageBox.Ok)
 
 
@@ -2186,73 +2187,81 @@ class ArmoryMainWindow(QMainWindow):
 
       if not satoshiIsAvailable():
          reply = MsgBoxCustom(MSGBOX.Question, tr('BitTorrent Option'), tr("""
-            You are currently configured to run the core Bitcoin software
-            yourself (Bitcoin-Qt or bitcoind).  <u>Normally</u>, you should
-            start the Bitcoin software first and wait for it to synchronize
+            You are currently configured to run the core %s software
+            yourself (%s-Qt or %sd).  <u>Normally</u>, you should
+            start the %s software first and wait for it to synchronize
             with the network before starting Armory.
             <br><br>
             <b>However</b>, Armory can shortcut most of this initial
             synchronization
             for you using BitTorrent.  If your firewall allows it,
             using BitTorrent can be an order of magnitude faster (2x to 20x)
-            than letting the Bitcoin software download it via P2P.
+            than letting the %s software download it via P2P.
             <br><br>
             <u>To synchronize using BitTorrent (recommended):</u>
-            Click "Use BitTorrent" below, and <u>do not</u> start the Bitcoin
+            Click "Use BitTorrent" below, and <u>do not</u> start the %s
             software until after it is complete.
             <br><br>
-            <u>To synchronize using Bitcoin P2P (fallback):</u>
-            Click "Cancel" below, then close Armory and start Bitcoin-Qt
-            (or bitcoind).  Do not start Armory until you see a green checkmark
-            in the bottom-right corner of the Bitcoin-Qt window."""), \
+            <u>To synchronize using %s P2P (fallback):</u>
+            Click "Cancel" below, then close Armory and start %s-Qt
+            (or %sd).  Do not start Armory until you see a green checkmark
+            in the bottom-right corner of the %s-Qt window.""" %
+            (getCoinText(), getCoinText(), getCoinText(capitalize=False),
+                getCoinText(), getCoinText(), getCoinText(), getCoinText(),
+                getCoinText(), getCoinText(capitalize=False), getCoinText())), \
             wCancel=True, yesStr='Use BitTorrent')
 
          if not reply:
             QMessageBox.warning(self, tr('Synchronize'), tr("""
                When you are ready to start synchronization, close Armory and
-               start Bitcoin-Qt or bitcoind.  Restart Armory only when
-               synchronization is complete.  If using Bitcoin-Qt, you will see
-               a green checkmark in the bottom-right corner"""), QMessageBox.Ok)
+               start %s-Qt or %sd.  Restart Armory only when
+               synchronization is complete.  If using %s-Qt, you will see
+               a green checkmark in the bottom-right corner""" % 
+               (getCoinText(), getCoinText(capitalize=False), getCoinText())), QMessageBox.Ok)
             return False
 
       else:
          reply = MsgBoxCustom(MSGBOX.Question, tr('BitTorrent Option'), tr("""
-            You are currently running the core Bitcoin software, but it
+            You are currently running the core %s software, but it
             is not fully synchronized with the network, yet.  <u>Normally</u>,
-            you should close Armory until Bitcoin-Qt (or bitcoind) is
+            you should close Armory until %s-Qt (or %sd) is
             finished
             <br><br>
             <b><u>However</u></b>, Armory can speed up this initial
             synchronization for you using BitTorrent.  If your firewall
             allows it, using BitTorrent can be an order of magnitude
             faster (2x to 20x)
-            than letting the Bitcoin software download it via P2P.
+            than letting the %s software download it via P2P.
             <br><br>
             <u>To synchronize using BitTorrent (recommended):</u>
-            Close the running Bitcoin software <b>right now</b>.  When it is
-            closed, click "Use BitTorrent" below.  Restart the Bitcoin software
+            Close the running %s software <b>right now</b>.  When it is
+            closed, click "Use BitTorrent" below.  Restart the %s software
             when Armory indicates it is complete.
             <br><br>
-            <u>To synchronize using Bitcoin P2P (fallback):</u>
-            Click "Cancel" below, and then close Armory until the Bitcoin
-            software is finished synchronizing.  If using Bitcoin-Qt, you
+            <u>To synchronize using %s P2P (fallback):</u>
+            Click "Cancel" below, and then close Armory until the %s
+            software is finished synchronizing.  If using %s-Qt, you
             will see a green checkmark in the bottom-right corner of the
-            main window."""), QMessageBox.Ok)
+            main window.""" % (getCoinText(), getCoinText(),
+                getCoinText(capitalize=False), getCoinText(), getCoinText(),
+                getCoinText(), getCoinText(), getCoinText(), getCoinText())),
+            QMessageBox.Ok)
 
          if reply:
             if satoshiIsAvailable():
                QMessageBox.warning(self, tr('Still Running'), tr("""
-                  The Bitcoin software still appears to be open!
+                  The %s software still appears to be open!
                   Close it <b>right now</b>
                   before clicking "Ok."  The BitTorrent engine will start
-                  as soon as you do."""), QMessageBox.Ok)
+                  as soon as you do.""" % getCoinText()), QMessageBox.Ok)
          else:
             QMessageBox.warning(self, tr('Synchronize'), tr("""
                You chose to finish synchronizing with the network using
-               the Bitcoin software which is already running.  Please close
-               Armory until it is finished.  If you are running Bitcoin-Qt,
+               the %s software which is already running.  Please close
+               Armory until it is finished.  If you are running %s-Qt,
                you will see a green checkmark in the bottom-right corner,
-               when it is time to open Armory again."""), QMessageBox.Ok)
+               when it is time to open Armory again.""" % (getCoinText(),
+                   getCoinText())), QMessageBox.Ok)
             return False
 
          return True
@@ -4243,8 +4252,9 @@ class ArmoryMainWindow(QMainWindow):
       elif self.doAutoBitcoind and not TheSDM.isRunningBitcoind():
          if satoshiIsAvailable():
             result = QMessageBox.warning(self, tr('Still Running'), tr("""
-               'Bitcoin-Qt is still running.  Armory cannot start until
-               'it is closed.  Do you want Armory to close it for you?"""), \
+               '%s-Qt is still running.  Armory cannot start until
+               'it is closed.  Do you want Armory to close it for you?""" %
+               getCoinText()), \
                QMessageBox.Yes | QMessageBox.No)
             if result==QMessageBox.Yes:
                self.closeExistingBitcoin()
@@ -4369,9 +4379,7 @@ class ArmoryMainWindow(QMainWindow):
       self.dashBtns = [[None]*3 for i in range(5)]
       self.dashBtns[DASHBTNS.Close   ][BTN] = QPushButton('Close ' + getCoinText() + ' Process')
       self.dashBtns[DASHBTNS.Install ][BTN] = QPushButton('Download ' + getCoinText())
-      self.dashBtns[DASHBTNS.Browse  ][BTN] = QPushButton('Open www.namecoin.info'
-                                                          if COIN == 'Namecoin'
-                                                          else 'Open www.bitcoin.org')
+      self.dashBtns[DASHBTNS.Browse  ][BTN] = QPushButton('Open %s' % DOWNLOAD_URL)
       self.dashBtns[DASHBTNS.Instruct][BTN] = QPushButton('Installation Instructions')
       self.dashBtns[DASHBTNS.Settings][BTN] = QPushButton('Change Settings')
 
@@ -4394,10 +4402,7 @@ class ArmoryMainWindow(QMainWindow):
 
       #####
       def openBitcoinOrg():
-         if COIN == 'Namecoin':
-            webbrowser.open('http://www.namecoin.info/')
-         else:
-            webbrowser.open('http://www.bitcoin.org/en/download')
+         webbrowser.open(DOWNLOAD_URL)
 
 
       #####
@@ -4436,18 +4441,20 @@ class ArmoryMainWindow(QMainWindow):
 
 
       self.dashBtns[DASHBTNS.Browse][TTIP] = self.createToolTipWidget( \
-           'Will open your default browser to http://www.bitcoin.org where you can '
-           'download the latest version of Bitcoin-Qt, and get other information '
-           'and links about Bitcoin, in general.')
+           'Will open your default browser to %s where you can '
+           'download the latest version of %s-Qt, and get other information '
+           'and links about Bitcoin, in general.' % (DOWNLOAD_URL, getCoinText()))
       self.dashBtns[DASHBTNS.Instruct][TTIP] = self.createToolTipWidget( \
            'Instructions are specific to your operating system and include '
            'information to help you verify you are installing the correct software')
       self.dashBtns[DASHBTNS.Settings][TTIP] = self.createToolTipWidget(
-           'Change Bitcoin-Qt/bitcoind management settings or point Armory to '
-           'a non-standard Bitcoin installation')
+           'Change %s-Qt/%sd management settings or point Armory to '
+           'a non-standard %s installation' % (getCoinText(),
+               getCoinText(capitalized=False), getCoinText()))
       self.dashBtns[DASHBTNS.Close][TTIP] = self.createToolTipWidget( \
-           'Armory has detected a running Bitcoin-Qt or bitcoind instance and '
-           'will force it to exit')
+           'Armory has detected a running %s-Qt or %sd instance and '
+           'will force it to exit' % (getCoinText(),
+               getCoinText(capitalized=False)))
 
       self.dashBtns[DASHBTNS.Install][BTN].setEnabled(False)
       self.dashBtns[DASHBTNS.Install][LBL] = QRichLabel('')
@@ -4878,6 +4885,11 @@ class ArmoryMainWindow(QMainWindow):
    #############################################################################
    def closeExistingBitcoin(self):
       for proc in psutil.process_iter():
+         if COIN=='Namecoin' and proc.name.lower() in ['namecoind.exe','namecoin.exe',\
+                                                        'namecoind','namecoin']:
+            killProcess(proc.pid)
+            time.sleep(2)
+            return
          if proc.name.lower() in ['bitcoind.exe','bitcoin-qt.exe',\
                                      'bitcoind','bitcoin-qt']:
             killProcess(proc.pid)
@@ -4886,8 +4898,9 @@ class ArmoryMainWindow(QMainWindow):
 
       # If got here, never found it
       QMessageBox.warning(self, 'Not Found', \
-         'Attempted to kill the running Bitcoin-Qt/bitcoind instance, '
-         'but it was not found.  ', QMessageBox.Ok)
+         'Attempted to kill the running %s-Qt/%sd instance, '
+         'but it was not found.  ' % (getCoinText(),
+             getCoinText(captialized=False)), QMessageBox.Ok)
 
    #############################################################################
    def getPercentageFinished(self, maxblk, lastblk):
@@ -5183,11 +5196,11 @@ class ArmoryMainWindow(QMainWindow):
          '<li>Sign transactions created from an online system</li>'
          '<li>Sign messages</li>'
          '</ul>'
-         '<br><br><b>NOTE:</b>  The Bitcoin network <u>will</u> process transactions '
+         '<br><br><b>NOTE:</b>  The %s network <u>will</u> process transactions '
          'to your addresses, even if you are offline.  It is perfectly '
          'okay to create and distribute payment addresses while Armory is offline, '
          'you just won\'t be able to verify those payments until the next time '
-         'Armory is online.')
+         'Armory is online.' % getCoinText())
       elif func.lower() == 'offline':
          return ( \
          'The following functionality is available in offline mode:'
@@ -5200,19 +5213,19 @@ class ArmoryMainWindow(QMainWindow):
          '<li>Sign messages</li>'
          '<li><b>Sign transactions created from an online system</b></li>'
          '</ul>'
-         '<br><br><b>NOTE:</b>  The Bitcoin network <u>will</u> process transactions '
+         '<br><br><b>NOTE:</b>  The %s network <u>will</u> process transactions '
          'to your addresses, regardless of whether you are online.  It is perfectly '
          'okay to create and distribute payment addresses while Armory is offline, '
          'you just won\'t be able to verify those payments until the next time '
-         'Armory is online.')
+         'Armory is online.' % getCoinText())
       elif func.lower() == 'online':
          return ( \
          '<ul>'
          '<li>Create, import or recover Armory wallets</li>'
          '<li>Generate new addresses to receive coins</li>'
-         '<li>Send bitcoins to other people</li>'
+         '<li>Send %s to other people</li>'
          '<li>Create one-time backups of your wallets (in printed or digital form)</li>'
-         '<li>Click on "bitcoin:" links in your web browser '
+         '<li>Click on "%s:" links in your web browser '
             '(not supported on all operating systems)</li>'
          '<li>Import private keys to wallets</li>'
          '<li>Monitor payments to watching-only wallets and create '
@@ -5220,7 +5233,7 @@ class ArmoryMainWindow(QMainWindow):
          '<li>Sign messages</li>'
          '<li><b>Create transactions with watching-only wallets, '
             'to be signed by an offline wallets</b></li>'
-         '</ul>')
+         '</ul>' % (getCoinText(capitalized=False, plural=True), getCoinText(capitalized=False)))
 
 
    #############################################################################
@@ -5233,7 +5246,7 @@ class ArmoryMainWindow(QMainWindow):
       # A few states don't care which mgmtMode you are in...
       if state == 'NewUserInfo':
          return tr("""
-         For more information about Armory, and even Bitcoin itself, you should
+         For more information about Armory, and even %s itself, you should
          visit the <a href="https://bitcoinarmory.com/faqs/">frequently
          asked questions page</a>.  If
          you are experiencing problems using this software, please visit the
@@ -5246,7 +5259,7 @@ class ArmoryMainWindow(QMainWindow):
          hard-drive failure, and make it easy for your family to recover
          your funds if something terrible happens to you.  <i>Each wallet
          only needs to be backed up once, ever!</i>  Without it, you are at
-         risk of losing all of your Bitcoins!  For more information,
+         risk of losing all of your %s!  For more information,
          visit the <a href="https://bitcoinarmory.com/armory-backups-are-forever/">Armory
          Backups page</a>.
          <br><br>
@@ -5255,24 +5268,25 @@ class ArmoryMainWindow(QMainWindow):
          <a href="https://bitcoinarmory.com/using-our-wallet">Armory
          Quick Start Guide</a>, and the
          <a href="https://bitcoinarmory.com/using-our-wallet/#offlinewallet">Offline
-         Wallet Tutorial</a>.<br><br> """)
+         Wallet Tutorial</a>.<br><br> """ % getCoinText(), getCoinText(capitalized=False, plural=True))
       elif state == 'OnlineFull1':
          return ( \
          '<p><b>You now have access to all the features Armory has to offer!</b><br>'
          'To see your balances and transaction history, please click '
          'on the "Transactions" tab above this text.  <br>'
-         'Here\'s some things you can do with Armory Bitcoin Client:'
-         '<br>')
+         'Here\'s some things you can do with Armory %s Client:'
+         '<br>' % getCoinText())
       elif state == 'OnlineFull2':
          return ( \
          ('If you experience any performance issues with Armory, '
-         'please confirm that Bitcoin-Qt is running and <i>fully '
-         'synchronized with the Bitcoin network</i>.  You will see '
+         'please confirm that %s-Qt is running and <i>fully '
+         'synchronized with the %s network</i>.  You will see '
          'a green checkmark in the bottom right corner of the '
-         'Bitcoin-Qt window if it is synchronized.  If not, it is '
+         '%s-Qt window if it is synchronized.  If not, it is '
          'recommended you close Armory and restart it only when you '
          'see that checkmark.'
-         '<br><br>'  if not self.doAutoBitcoind else '') + (
+         '<br><br>' % (getCoinText(), getCoinText(), getCoinText()) \
+                 if not self.doAutoBitcoind else '') + (
          '<b>Please backup your wallets!</b>  Armory wallets are '
          '"deterministic", meaning they only need to be backed up '
          'one time (unless you have imported external addresses/keys). '
@@ -5317,9 +5331,9 @@ class ArmoryMainWindow(QMainWindow):
          'then you can restart Armory with the "--skip-online-check" '
          'option, or change it in the Armory settings.'
          '<br><br>'
-         'If you do not have Bitcoin-Qt installed, you can '
-         'download it from <a href="http://www.bitcoin.org">'
-         'http://www.bitcoin.org</a>.')
+         'If you do not have %s-Qt installed, you can '
+         'download it from <a href="%s">'
+         '%s</a>.' % (getCoinText(), DOWNLOAD_URL, DOWNLOAD_URL))
 
       # Branch the available display text based on which Satoshi-Management
       # mode Armory is using.  It probably wasn't necessary to branch the
@@ -5331,22 +5345,24 @@ class ArmoryMainWindow(QMainWindow):
             'You are currently in offline mode, but can '
             'switch to online mode by pressing the button above.  However, '
             'it is not recommended that you switch until '
-            'Bitcoin-Qt/bitcoind is fully synchronized with the bitcoin network.  '
+            '%s-Qt/%sd is fully synchronized with the %s network.  '
             'You will see a green checkmark in the bottom-right corner of '
-            'the Bitcoin-Qt window when it is finished.'
+            'the %s-Qt window when it is finished.'
             '<br><br>'
             'Switching to online mode will give you access '
             'to more Armory functionality, including sending and receiving '
-            'bitcoins and viewing the balances and transaction histories '
-            'of each of your wallets.<br><br>')
+            '%s and viewing the balances and transaction histories '
+            'of each of your wallets.<br><br>' % (getCoinText(),
+                getCoinText(capitalized=False), getCoinText(), getCoinText(),
+                getCoinText(capitalized=False, plural=True)))
          elif state == 'OfflineNoSatoshi':
             bitconf = os.path.join(BTC_HOME_DIR, 'bitcoin.conf')
             return ( \
             'You are currently in offline mode because '
-            'Bitcoin-Qt is not running.  To switch to online '
-            'mode, start Bitcoin-Qt and let it synchronize with the network '
+            '%s-Qt is not running.  To switch to online '
+            'mode, start %s-Qt and let it synchronize with the network '
             '-- you will see a green checkmark in the bottom-right corner when '
-            'it is complete.  If Bitcoin-Qt is already running and you believe '
+            'it is complete.  If %s-Qt is already running and you believe '
             'the lack of connection is an error (especially if using proxies), '
             'please see <a href="'
             'https://bitcointalk.org/index.php?topic=155717.msg1719077#msg1719077">'
@@ -5354,18 +5370,20 @@ class ArmoryMainWindow(QMainWindow):
             '<br><br>'
             '<b>If you prefer to have Armory do this for you</b>, '
             'then please check "Let Armory run '
-            'Bitcoin-Qt in the background" under "File"->"Settings."'
+            '%s-Qt in the background" under "File"->"Settings."'
             '<br><br>'
-            'If you are new to Armory and/or Bitcoin-Qt, '
+            'If you are new to Armory and/or %s-Qt, '
             'please visit the Armory '
             'webpage for more information.  Start at '
             '<a href="https://bitcoinarmory.com/armory-and-bitcoin-qt">'
-            'Why Armory needs Bitcoin-Qt</a> or go straight to our <a '
+            'Why Armory needs %s-Qt</a> or go straight to our <a '
             'href="https://bitcoinarmory.com/faqs/">'
             'frequently asked questions</a> page for more general information.  '
             'If you already know what you\'re doing and simply need '
-            'to fetch the latest version of Bitcoin-Qt, you can download it from '
-            '<a href="http://www.bitcoin.org">http://www.bitcoin.org</a>.')
+            'to fetch the latest version of %s-Qt, you can download it from '
+            '<a href="%s">%s</a>.' % (getCoinText(), getCoinText(), getCoinText(),
+                getCoinText(), getCoinText(), getCoinText(), getCoinText(),
+                DOWNLOAD_URL, DOWNLOAD_URL))
          elif state == 'OfflineNoInternet':
             return ( \
             'You are currently in offline mode because '
@@ -5375,28 +5393,33 @@ class ArmoryMainWindow(QMainWindow):
             'or adjust the Armory settings.  Then restart Armory.'
             '<br><br>'
             'If this is intended to be an offline computer, note '
-            'that it is not necessary to have Bitcoin-Qt or bitcoind '
-            'running.' )
+            'that it is not necessary to have %s-Qt or %sd '
+            'running.' % (getCoinText(), getCoinText(capitalized=False)) )
          elif state == 'OfflineNoBlkFiles':
             return ( \
             'You are currently in offline mode because '
             'Armory could not find the blockchain files produced '
-            'by Bitcoin-Qt.  Do you run Bitcoin-Qt (or bitcoind) '
+            'by %s-Qt.  Do you run %s-Qt (or %sd) '
             'from a non-standard directory?   Armory expects to '
             'find the blkXXXX.dat files in <br><br>%s<br><br> '
             'If you know where they are located, please restart '
             'Armory using the " --satoshi-datadir=[path]" '
-            'to notify Armory where to find them.') % BLKFILE_DIR
+            'to notify Armory where to find them.') % (getCoinText(),
+                    getCoinText(), getCoinText(capitalized=False),
+                    BLKFILE_DIR)
          elif state == 'Disconnected':
             return ( \
-            'Armory was previously online, but the connection to Bitcoin-Qt/'
-            'bitcoind was interrupted.  You will not be able to send bitcoins '
-            'or confirm receipt of bitcoins until the connection is '
-            'reestablished.  br><br>Please check that Bitcoin-Qt is open '
+            'Armory was previously online, but the connection to %s-Qt/'
+            '%sd was interrupted.  You will not be able to send %s '
+            'or confirm receipt of %s until the connection is '
+            'reestablished.  br><br>Please check that %s-Qt is open '
             'and synchronized with the network.  Armory will <i>try to '
             'reconnect</i> automatically when the connection is available '
-            'again.  If Bitcoin-Qt is available again, and reconnection does '
-            'not happen, please restart Armory.<br><br>')
+            'again.  If %s-Qt is available again, and reconnection does '
+            'not happen, please restart Armory.<br><br>' % (getCoinText(),
+                getCoinText(capitalized=False), getCoinText(capitalized=False,
+                    plural=True), getCoinText(capitalized=False, plural=True),
+                getCoinText(), getCoinText()))
          elif state == 'ScanNoWallets':
             return ( \
             'Please wait while the global transaction history is scanned. '
@@ -5415,41 +5438,45 @@ class ArmoryMainWindow(QMainWindow):
       elif mgmtMode.lower()=='auto':
          if state == 'OfflineBitcoindRunning':
             return ( \
-            'It appears you are already running Bitcoin software '
-            '(Bitcoin-Qt or bitcoind). '
+            'It appears you are already running %s software '
+            '(%s-Qt or %sd). '
             'Unlike previous versions of Armory, you should <u>not</u> run '
             'this software yourself --  Armory '
             'will run it in the background for you.  Either close the '
-            'Bitcoin application or adjust your settings.  If you change '
-            'your settings, then please restart Armory.')
+            '%s application or adjust your settings.  If you change '
+            'your settings, then please restart Armory.' % (getCoinText(),
+                getCoinText(), getCoinText(capitalized=False)))
          if state == 'OfflineNeedBitcoinInst':
             return ( \
             '<b>Only one more step to getting online with Armory!</b>   You '
-            'must install the Bitcoin software from www.bitcoin.org in order '
-            'for Armory to communicate with the Bitcoin network.  If the '
-            'Bitcoin software is already installed and/or you would prefer '
+            'must install the %s software from %s in order '
+            'for Armory to communicate with the %s network.  If the '
+            '%s software is already installed and/or you would prefer '
             'to manage it yourself, please adjust your settings and '
-            'restart Armory.')
+            'restart Armory.' % (getCoinText(), DOWNLOAD_URL, getCoinText(),
+                getCoinText()))
          if state == 'InitializingLongTime':
+            space = '5-6 GB' if COIN=='Namecoin' else '40-50 GB'
             return tr("""
-            <b>To maximize your security, the Bitcoin engine is downloading
+            <b>To maximize your security, the %s engine is downloading
             and verifying the global transaction ledger.  <u>This will take
             several hours, but only needs to be done once</u>!</b>  It is
             usually best to leave it running over night for this
             initialization process.  Subsequent loads will only take a few
             minutes.
             <br><br>
-            <b>Please Note:</b> Between Armory and the underlying Bitcoin
-            engine, you need to have 40-50 GB of spare disk space available
+            <b>Please Note:</b> Between Armory and the underlying %s
+            engine, you need to have %s of spare disk space available
             to hold the global transaction history.
             <br><br>
             While you wait, you can manage your wallets.  Make new wallets,
             make digital or paper backups, create Bitcoin addresses to receive
             payments,
             sign messages, and/or import private keys.  You will always
-            receive Bitcoin payments regardless of whether you are online,
+            receive %s payments regardless of whether you are online,
             but you will have to verify that payment through another service
-            until Armory is finished this initialization.""")
+            until Armory is finished this initialization.""" % (getCoinText(),
+                space, getCoinText()))
          if state == 'InitializingDoneSoon':
             return ( \
             'The software is downloading and processing the latest activity '
@@ -5465,59 +5492,63 @@ class ArmoryMainWindow(QMainWindow):
             (('' if len(self.walletMap)==1 else 's',)*2))
          if state == 'OnlineDisconnected':
             return ( \
-            'Armory\'s communication with the Bitcoin network was interrupted. '
+            'Armory\'s communication with the %s network was interrupted. '
             'This usually does not happen unless you closed the process that '
             'Armory was using to communicate with the network. Armory requires '
             '%s to be running in the background, and this error pops up if it '
             'disappears.'
             '<br><br>You may continue in offline mode, or you can close '
-            'all Bitcoin processes and restart Armory.' \
-            % os.path.basename(TheSDM.executable))
+            'all %s processes and restart Armory.' \
+            % (getCoinText(), os.path.basename(TheSDM.executable), getCoinText()))
          if state == 'OfflineBadConnection':
             return ( \
             'Armory has experienced an issue trying to communicate with the '
-            'Bitcoin software.  The software is running in the background, '
+            '%s software.  The software is running in the background, '
             'but Armory cannot communicate with it through RPC as it expects '
-            'to be able to.  If you changed any settings in the Bitcoin home '
+            'to be able to.  If you changed any settings in the %s home '
             'directory, please make sure that RPC is enabled and that it is '
             'accepting connections from localhost.  '
             '<br><br>'
             'If you have not changed anything, please export the log file '
-            '(from the "File" menu) and send it to support@bitcoinarmory.com')
+            '(from the "File" menu) and send it to support@bitcoinarmory.com' % \
+                    (getCoinText(), getCoinText()))
          if state == 'OfflineSatoshiAvail':
             return ( \
             'Armory does not detect internet access, but it does detect '
-            'running Bitcoin software.  Armory is in offline-mode. <br><br>'
+            'running %s software.  Armory is in offline-mode. <br><br>'
             'If you are intending to run an offline system, you will not '
-            'need to have the Bitcoin software installed on the offline '
+            'need to have the %s software installed on the offline '
             'computer.  It is only needed for the online computer. '
             'If you expected to be online and '
             'the absence of internet is an error, please restart Armory '
-            'using the "--skip-online-check" option.  ')
+            'using the "--skip-online-check" option.  ' % (getCoinText(),
+                getCoinText()))
          if state == 'OfflineForcedButSatoshiAvail':
             return ( \
             'Armory was started in offline-mode, but detected you are '
-            'running Bitcoin software.  If you are intending to run an '
-            'offline system, you will <u>not</u> need to have the Bitcoin '
+            'running %s software.  If you are intending to run an '
+            'offline system, you will <u>not</u> need to have the %s '
             'software installed or running on the offline '
-            'computer.  It is only required for being online. ')
+            'computer.  It is only required for being online. ' % \
+                    (getCoinText(), getCoinText()))
          if state == 'OfflineBadDBEnv':
             return ( \
-            'The Bitcoin software indicates there '
+            'The %s software indicates there '
             'is a problem with its databases.  This can occur when '
-            'Bitcoin-Qt/bitcoind is upgraded or downgraded, or sometimes '
+            '%s-Qt/%sd is upgraded or downgraded, or sometimes '
             'just by chance after an unclean shutdown.'
             '<br><br>'
-            'You can either revert your installed Bitcoin software to the '
+            'You can either revert your installed %s software to the '
             'last known working version (but not earlier than version 0.8.1) '
-            'or delete everything <b>except</b> "wallet.dat" from the your Bitcoin '
+            'or delete everything <b>except</b> "wallet.dat" from the your %s '
             'home directory:<br><br>'
             '<font face="courier"><b>%s</b></font>'
             '<br><br>'
-            'If you choose to delete the contents of the Bitcoin home '
+            'If you choose to delete the contents of the %s home '
             'directory, you will have to do a fresh download of the blockchain '
             'again, which will require a few hours the first '
-            'time.' % self.satoshiHomePath)
+            'time.' % (getCoinText(), getCoinText(), getCoinText(capitalized=False),
+                getCoinText(), getCoinText(), self.satoshiHomePath, getCoinText()))
          if state == 'OfflineBtcdCrashed':
             sout = '' if TheSDM.btcOut==None else str(TheSDM.btcOut)
             serr = '' if TheSDM.btcErr==None else str(TheSDM.btcErr)
@@ -5527,26 +5558,28 @@ class ArmoryMainWindow(QMainWindow):
             serrDisp = '<b><font face="courier">StdErr: %s</font></b>' % serrHtml
             if len(sout)>0 or len(serr)>0:
                return  (tr("""
-               There was an error starting the underlying Bitcoin engine.
+               There was an error starting the underlying %s engine.
                This should not normally happen.  Usually it occurs when you
-               have been using Bitcoin-Qt prior to using Armory, especially
-               if you have upgraded or downgraded Bitcoin-Qt recently.
-               Output from bitcoind:<br>""") + \
+               have been using %s-Qt prior to using Armory, especially
+               if you have upgraded or downgraded %s-Qt recently.
+               Output from %sd:<br>""" % (getCoinText(), getCoinText(),
+                   getCoinText(), getCoinText(capitalized=False))) + \
                (soutDisp if len(sout)>0 else '') + \
                (serrDisp if len(serr)>0 else '') )
             else:
                return ( tr("""
-                  There was an error starting the underlying Bitcoin engine.
+                  There was an error starting the underlying %s engine.
                   This should not normally happen.  Usually it occurs when you
-                  have been using Bitcoin-Qt prior to using Armory, especially
-                  if you have upgraded or downgraded Bitcoin-Qt recently.
+                  have been using %s-Qt prior to using Armory, especially
+                  if you have upgraded or downgraded %s-Qt recently.
                   <br><br>
                   Unfortunately, this error is so strange, Armory does not
                   recognize it.  Please go to "Export Log File" from the "File"
                   menu and email at as an attachment to <a href="mailto:
-                  support@bitcoinarmory.com?Subject=Bitcoind%20Crash">
+                  support@bitcoinarmory.com?Subject=%sd%20Crash">
                   support@bitcoinarmory.com</a>.  We apologize for the
-                  inconvenience!"""))
+                  inconvenience!""" % (getCoinText(), getCoinText(),
+                      getCoinText(), getCoinText())))
 
    # TODO - move out of polling and call on events
    #############################################################################
@@ -5681,7 +5714,7 @@ class ArmoryMainWindow(QMainWindow):
                if satoshiIsAvailable() or sdmState=='BitcoindAlreadyRunning':
                   # But bitcoind/-qt is already running
                   LOGINFO('Dashboard switched to auto-butSatoshiRunning')
-                  self.lblDashModeSync.setText(' Please close Bitcoin-Qt', \
+                  self.lblDashModeSync.setText(' Please close %s-Qt' % getCoinText(), \
                                                          size=4, bold=True)
                   setBtnFrameVisible(True, '')
                   setBtnRowVisible(DASHBTNS.Close, True)
@@ -5697,11 +5730,11 @@ class ArmoryMainWindow(QMainWindow):
                elif sdmState in ['BitcoindExeMissing', 'BitcoindHomeMissing']:
                   LOGINFO('Dashboard switched to auto-cannotFindExeHome')
                   if sdmState=='BitcoindExeMissing':
-                     self.lblDashModeSync.setText('Cannot find Bitcoin Installation', \
-                                                         size=4, bold=True)
+                     self.lblDashModeSync.setText('Cannot find %s Installation' % \
+                             getCoinText(), size=4, bold=True)
                   else:
-                     self.lblDashModeSync.setText('Cannot find Bitcoin Home Directory', \
-                                                         size=4, bold=True)
+                     self.lblDashModeSync.setText('Cannot find %s Home Directory' % \
+                             getCoinText(), size=4, bold=True)
                   setBtnRowVisible(DASHBTNS.Close, satoshiIsAvailable())
                   setBtnRowVisible(DASHBTNS.Install, True)
                   setBtnRowVisible(DASHBTNS.Browse, True)
@@ -5732,11 +5765,11 @@ class ArmoryMainWindow(QMainWindow):
                   LOGERROR('Should not usually get here')
                   setOnlyDashModeVisible()
                   setBtnFrameVisible(True, \
-                     'Try reinstalling the Bitcoin '
+                     'Try reinstalling the %s '
                      'software then restart Armory.  If you continue to have '
                      'problems, please contact Armory\'s core developer at '
                      '<a href="mailto:support@bitcoinarmory.com?Subject=Bitcoind%20Crash"'
-                     '>support@bitcoinarmory.com</a>.')
+                     '>support@bitcoinarmory.com</a>.' % getCoinText())
                   setBtnRowVisible(DASHBTNS.Settings, True)
                   setBtnRowVisible(DASHBTNS.Install, True)
                   LOGINFO('Dashboard switched to auto-BtcdCrashed')
@@ -5771,10 +5804,11 @@ class ArmoryMainWindow(QMainWindow):
                   else:
                      extraTxt = tr("""
                         <b>Armory has lost connection to the
-                        core Bitcoin software.  If you did not do anything
-                        that affects your network connection or the bitcoind
+                        core %s software.  If you did not do anything
+                        that affects your network connection or the %sd
                         process, it will probably recover on its own in a
-                        couple minutes</b><br><br>""")
+                        couple minutes</b><br><br>""" % (getCoinText(),
+                            getCoinText(captialized=False)))
                      self.lblTimeLeftSync.setVisible(False)
                      self.barProgressSync.setFormat('')
 
@@ -5837,9 +5871,9 @@ class ArmoryMainWindow(QMainWindow):
 
                   setBtnRowVisible(DASHBTNS.Settings, True)
                   setBtnFrameVisible(True, \
-                     'Since version 0.88, Armory runs bitcoind in the '
+                     'Since version 0.88, Armory runs %sd in the '
                      'background.  You can switch back to '
-                     'the old way in the Settings dialog. ')
+                     'the old way in the Settings dialog. ' % getCoinText(capitalized=False))
 
                   descr2 += self.GetDashFunctionalityText('Offline')
                   self.lblDashDescr1.setText(descr1)
@@ -5879,9 +5913,10 @@ class ArmoryMainWindow(QMainWindow):
                   descr = self.GetDashStateText('User','OfflineNoSatoshi')
                   setBtnRowVisible(DASHBTNS.Settings, True)
                   setBtnFrameVisible(True, \
-                     'If you would like Armory to manage the Bitcoin software '
-                     'for you (Bitcoin-Qt or bitcoind), then adjust your '
-                     'Armory settings, then restart Armory.')
+                     'If you would like Armory to manage the %s software '
+                     'for you (%s-Qt or %sd), then adjust your '
+                     'Armory settings, then restart Armory.' % 
+                     (getCoinText(), getCoinText(), getCoinText(capitalized=False)))
                   descr = self.GetDashStateText('User','OfflineNoSatoshiNoInternet')
                else:
                   self.btnModeSwitch.setVisible(True)

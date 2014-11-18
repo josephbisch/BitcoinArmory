@@ -1443,7 +1443,7 @@ class DlgPasswd3(ArmoryDialog):
          '<br><br>'
          'Please enter your passphrase a third time to indicate that you '
          'are aware of the risks of losing your passphrase!</b>' % \
-                 getCoinText(capitalize=False, plural=True), doWrap=True)
+                 getCoinText(capitalized=False, plural=True), doWrap=True)
 
 
       self.edtPasswd3 = QLineEdit()
@@ -8982,10 +8982,12 @@ class DlgSettings(ArmoryDialog):
       lblDefaultUriTitle = QRichLabel(tr("""
          <b>Set Armory as default URL handler</b>"""))
       lblDefaultURI = QRichLabel(tr("""
-         Set Armory to be the default when you click on "bitcoin:"
+         Set Armory to be the default when you click on "%s:"
          links in your browser or in emails.
          You can test if your operating system is supported by clicking
-         on a "bitcoin:" link right after clicking this button."""))
+         on a "%s:" link right after clicking this button.""" % \
+                 (getCoinText(capitalized=False),
+                     getCoinText(capitalized=False))))
       btnDefaultURI = QPushButton(tr('Set Armory as Default'))
       frmBtnDefaultURI = makeHorizFrame([btnDefaultURI, 'Stretch'])
 
@@ -8997,12 +8999,13 @@ class DlgSettings(ArmoryDialog):
       def clickRegURI():
          self.main.setupUriRegistration(justDoIt=True)
          QMessageBox.information(self, tr('Registered'), tr("""
-            Armory just attempted to register itself to handle "bitcoin:"
+            Armory just attempted to register itself to handle "%s:"
             links, but this does not work on all operating systems.  You can
             test it by going to the
-            <a href="http://www.bitcoinarmory.com">Bitcoin Armory
+            <a href="http://www.bitcoinarmory.com">%s Armory
             website</a> and clicking the link at the bottom of the
-            homepage."""), QMessageBox.Ok)
+            homepage.""" % (getCoinText(capitalized=False), getCoinText())),
+            QMessageBox.Ok)
 
       self.connect(btnDefaultURI, SIGNAL(CLICKED), clickRegURI)
 
@@ -9568,7 +9571,7 @@ class DlgSettings(ArmoryDialog):
             ('"Expert" mode is similar to "Advanced" but includes '
              'access to lower-level info about transactions, scripts, keys '
              'and network protocol.  Most extra functionality is geared '
-             'towards Bitcoin software developers.')
+             'towards %s software developers.' % getCoinText())
       self.lblUsermodeDescr.setText(strDescr)
 
 
