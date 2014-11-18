@@ -2944,8 +2944,8 @@ URI_VERSION_STR = '1.0'
 
 
 ################################################################################
-# Take in a "bitcoin:" URI string and parse the data out into a dictionary. If
-# the URI isn't a Bitcoin URI, return an empty dictionary.
+# Take in a "bitcoin:" or "namecoin:" URI string and parse the data out into a 
+# dictionary. If the URI isn't a Bitcoin or Namecoin URI, return an empty dictionary.
 def parseBitcoinURI(uriStr):
    """ Takes a URI string, returns normalized dicitonary with pieces """
    data = {}
@@ -2962,7 +2962,7 @@ def parseBitcoinURI(uriStr):
          query[k] = v[0]
 
    # Now start walking through the parts and get the info out of it.
-   if uri.scheme == 'bitcoin':
+   if uri.scheme == 'bitcoin' or uri.scheme == 'namecoin':
       data['address'] = uri.path
 
       # Apply filters to known keys. Do NOT filter based on the "req-"
@@ -3007,7 +3007,10 @@ def uriPercentToReserved(theStr):
 
 ################################################################################
 def createBitcoinURI(addr, amt=None, msg=None):
-   uriStr = 'bitcoin:%s' % addr
+   if COIN == 'Namecoin':
+      uriStr = 'namecoin:%s' % addr
+   else:
+      uriStr = 'bitcoin:%s' % addr
    if amt or msg:
       uriStr += '?'
 

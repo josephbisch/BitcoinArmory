@@ -2489,16 +2489,18 @@ class ArmoryMainWindow(QMainWindow):
          LOGERROR('%sed "bitcoin:" link in offline mode.' % ClickOrEnter)
          self.bringArmoryToFront()
          QMessageBox.warning(self, 'Offline Mode',
-            'You %sed on a "bitcoin:" link, but Armory is in '
+            'You %sed on a "%s:" link, but Armory is in '
             'offline mode, and is not capable of creating transactions. '
             '%sing links will only work if Armory is connected '
-            'to the Bitcoin network!' % (clickOrEnter, ClickOrEnter), \
+            'to the %s network!' % (clickOrEnter, getCoinText(capitalized=False),
+                ClickOrEnter, getCoinText()), \
              QMessageBox.Ok)
          return {}
 
       if len(uriDict)==0:
-         warnMsg = ('It looks like you just %sed a "bitcoin:" link, but '
-                    'that link is malformed.  ' % clickOrEnter)
+         warnMsg = ('It looks like you just %sed a "%s:" link, but '
+                    'that link is malformed.  ' % (clickOrEnter,
+                        getCoinText(capitalized=False)))
          if self.usermode == USERMODE.Standard:
             warnMsg += ('Please check the source of the link and enter the '
                         'transaction manually.')
@@ -2509,9 +2511,10 @@ class ArmoryMainWindow(QMainWindow):
          return {}
 
       if not uriDict.has_key('address'):
-         QMessageBox.warning(self, 'The "bitcoin:" link you just %sed '
+         QMessageBox.warning(self, 'The "%s:" link you just %sed '
             'does not even contain an address!  There is nothing that '
-            'Armory can do with this link!' % clickOrEnter, QMessageBox.Ok)
+            'Armory can do with this link!' % (getCoinText(capitalized=False),
+                clickOrEnter), QMessageBox.Ok)
          LOGERROR('No address in "bitcoin:" link!  Nothing to do!')
          return {}
 
@@ -2522,10 +2525,11 @@ class ArmoryMainWindow(QMainWindow):
          if NETWORKS.has_key(theAddrByte):
             net = NETWORKS[theAddrByte]
          QMessageBox.warning(self, 'Wrong Network!', \
-            'The address for the "bitcoin:" link you just %sed is '
+            'The address for the "%s:" link you just %sed is '
             'for the wrong network!  You are on the <b>%s</b> '
             'and the address you supplied is for the the '
-            '<b>%s</b>!' % (clickOrEnter, NETWORKS[ADDRBYTE], net), \
+            '<b>%s</b>!' % (getCoinText(capitalized=False),
+                clickOrEnter, NETWORKS[ADDRBYTE], net), \
             QMessageBox.Ok)
          LOGERROR('URI link is for the wrong network!')
          return {}
@@ -2534,11 +2538,12 @@ class ArmoryMainWindow(QMainWindow):
       recognized = ['address','version','amount','label','message']
       for key,value in uriDict.iteritems():
          if key.startswith('req-') and not key[4:] in recognized:
-            QMessageBox.warning(self,'Unsupported URI', 'The "bitcoin:" link '
+            QMessageBox.warning(self,'Unsupported URI', 'The "%s:" link '
                'you just %sed contains fields that are required but not '
                'recognized by Armory.  This may be an older version of Armory, '
                'or the link you %sed on uses an exotic, unsupported format.'
-               '<br><br>The action cannot be completed.' % (clickOrEnter, clickOrEnter), \
+               '<br><br>The action cannot be completed.' % \
+                       (getCoinText(capitalized=False), clickOrEnter, clickOrEnter), \
                QMessageBox.Ok)
             LOGERROR('URI link contains unrecognized req- fields.')
             return {}
@@ -2552,9 +2557,9 @@ class ArmoryMainWindow(QMainWindow):
       LOGINFO('uriLinkClicked')
       if TheBDM.getState()==BDM_OFFLINE:
          QMessageBox.warning(self, 'Offline', \
-            'You just clicked on a "bitcoin:" link, but Armory is offline '
+            'You just clicked on a "%s:" link, but Armory is offline '
             'and cannot send transactions.  Please click the link '
-            'again when Armory is online.', \
+            'again when Armory is online.' % getCoinText(capitalized=False), \
             QMessageBox.Ok)
          return
       elif not TheBDM.getState()==BDM_BLOCKCHAIN_READY:
