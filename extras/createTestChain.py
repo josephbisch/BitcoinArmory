@@ -27,9 +27,12 @@ if not os.path.isdir('cppForSwig/reorgTest'):
 # tests to pass. (Command line args are ideal but this script collides with the
 # parser in ArmoryUtils.)
 fakeBlocks=False
+COIN = 'Bitcoin'
 
 # Use the genesis block to kick things off. (Might not work on Windows.)
 blkfile = open(os.environ['HOME'] + '/.bitcoin/blocks/blk00000.dat','r')
+if COIN=='Namecoin':
+   blkfile = open(os.environ['HOME'] + '/.namecoin/blk0001.dat','r')
 blkfile.seek(8,0)
 genBlock = PyBlock().unserialize(blkfile.read(80 + 1 + 285))
 blkfile.close()
