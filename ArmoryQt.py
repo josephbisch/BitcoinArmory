@@ -1346,9 +1346,9 @@ class ArmoryMainWindow(QMainWindow):
    @AllowAsync
    def registerBitcoinWithFF(self):
       #the 3 nodes needed to add to register bitcoin as a protocol in FF
-      rdfschemehandler = 'about=\"urn:scheme:handler:bitcoin\"'
-      rdfscheme = 'about=\"urn:scheme:bitcoin\"'
-      rdfexternalApp = 'about=\"urn:scheme:externalApplication:bitcoin\"'
+      rdfschemehandler = 'about=\"urn:scheme:handler:%s\"' % getCoinText(capitalized=False)
+      rdfscheme = 'about=\"urn:scheme:%s\"' % getCoinText(capitalized=False)
+      rdfexternalApp = 'about=\"urn:scheme:externalApplication:%s\"' % getCoinText(capitalized=False)
 
       #find mimeTypes.rdf file
       home = os.getenv('HOME')
@@ -1382,22 +1382,22 @@ class ArmoryMainWindow(QMainWindow):
 
             #add the missing nodes
             if rdfsch == -1:
-               FFrdf.write(' <RDF:Description RDF:about=\"urn:scheme:handler:bitcoin\"\n')
+               FFrdf.write(' <RDF:Description RDF:about=\"urn:scheme:handler:%s\"\n' % getCoinText(capitalized=False))
                FFrdf.write('                  NC:alwaysAsk=\"false\">\n')
-               FFrdf.write('    <NC:externalApplication RDF:resource=\"urn:scheme:externalApplication:bitcoin\"/>\n')
+               FFrdf.write('    <NC:externalApplication RDF:resource=\"urn:scheme:externalApplication:%s\"/>\n' % getCoinText(capitalized=False))
                FFrdf.write('    <NC:possibleApplication RDF:resource=\"urn:handler:local:/usr/bin/xdg-open\"/>\n')
                FFrdf.write(' </RDF:Description>\n')
                i+=1
 
             if rdfsc == -1:
-               FFrdf.write(' <RDF:Description RDF:about=\"urn:scheme:bitcoin\"\n')
+               FFrdf.write(' <RDF:Description RDF:about=\"urn:scheme:%s\"\n' % getCoinText(capitalized=False))
                FFrdf.write('                  NC:value=\"bitcoin\">\n')
-               FFrdf.write('    <NC:handlerProp RDF:resource=\"urn:scheme:handler:bitcoin\"/>\n')
+               FFrdf.write('    <NC:handlerProp RDF:resource=\"urn:scheme:handler:%s\"/>\n' % getCoinText(capitalized=False))
                FFrdf.write(' </RDF:Description>\n')
                i+=1
 
             if rdfea == -1:
-               FFrdf.write(' <RDF:Description RDF:about=\"urn:scheme:externalApplication:bitcoin\"\n')
+               FFrdf.write(' <RDF:Description RDF:about=\"urn:scheme:externalApplication:%s\"\n' % getCoinText(capitalized=False))
                FFrdf.write('                  NC:prettyName=\"xdg-open\"\n')
                FFrdf.write('                  NC:path=\"/usr/bin/xdg-open\" />\n')
                i+=1
@@ -1414,12 +1414,12 @@ class ArmoryMainWindow(QMainWindow):
       """
       LOGINFO('setupUriRegistration')
 
-      if USE_TESTNET or USE_NAMECOIN or USE_NAMECOIN_TESTNET:
+      if USE_TESTNET or USE_NAMECOIN_TESTNET:
          return
 
       if OS_LINUX:
-         out,err = execAndWait('gconftool-2 --get /desktop/gnome/url-handlers/bitcoin/command')
-         out2,err = execAndWait('xdg-mime query default x-scheme-handler/bitcoin')
+         out,err = execAndWait('gconftool-2 --get /desktop/gnome/url-handlers/%s/command' % getCoinText(capitalized=False))
+         out2,err = execAndWait('xdg-mime query default x-scheme-handler/%s' % getCoinText(capitalized=False))
 
          #check FF protocol association
          #checkFF_thread = threading.Thread(target=self.registerBitcoinWithFF)
@@ -1428,10 +1428,11 @@ class ArmoryMainWindow(QMainWindow):
 
          def setAsDefault():
             LOGINFO('Setting up Armory as default URI handler...')
-            execAndWait('gconftool-2 -t string -s /desktop/gnome/url-handlers/bitcoin/command "python /usr/lib/armory/ArmoryQt.py \"%s\""')
-            execAndWait('gconftool-2 -s /desktop/gnome/url-handlers/bitcoin/needs_terminal false -t bool')
-            execAndWait('gconftool-2 -t bool -s /desktop/gnome/url-handlers/bitcoin/enabled true')
-            execAndWait('xdg-mime default armory.desktop x-scheme-handler/bitcoin')
+            execAndWait('gconftool-2 -t string -s /desktop/gnome/url-handlers/%s/command "python /usr/lib/armory/ArmoryQt.py \"%s\""' \
+                    % getCoinText(capitalized=False))
+            execAndWait('gconftool-2 -s /desktop/gnome/url-handlers/%s/needs_terminal false -t bool' % getCoinText(capitalized=False))
+            execAndWait('gconftool-2 -t bool -s /desktop/gnome/url-handlers/%s/enabled true' % getCoinText(capitalized=False))
+            execAndWait('xdg-mime default armory.desktop x-scheme-handler/%s' % getCoinText(capitalized=False))
 
 
          if ('no value' in out.lower() or 'no value' in err.lower()) and not 'armory.desktop' in out2.lower():
@@ -1444,8 +1445,8 @@ class ArmoryMainWindow(QMainWindow):
             if not self.getSettingOrSetDefault('DNAA_DefaultApp', False):
                reply = MsgBoxWithDNAA(MSGBOX.Question, 'Default URL Handler', \
                   'Armory is not set as your default application for handling '
-                  '"bitcoin:" links.  Would you like to use Armory as the '
-                  'default?', 'Do not ask this question again')
+                  '"%s:" links.  Would you like to use Armory as the '
+                  'default?' % getCoinText(capitalized=False), 'Do not ask this question again')
                if reply[0]==True:
                   setAsDefault()
                if reply[1]==True:
@@ -1473,7 +1474,7 @@ class ArmoryMainWindow(QMainWindow):
          modulepathname += unicode(passstr[0:(rtlength*2)], encoding='utf16') + u'" "%1"'
          modulepathname = modulepathname.encode('utf8')
 
-         rootKey = 'bitcoin\\shell\\open\\command'
+         rootKey = '%s\\shell\\open\\command' % getCoinText(capitalized=False)
          try:
             userKey = 'Software\\Classes\\' + rootKey
             registryKey = OpenKey(HKEY_CURRENT_USER, userKey, 0, KEY_READ)
@@ -1515,8 +1516,8 @@ class ArmoryMainWindow(QMainWindow):
             # needed.  They have enough to worry about with this weird new program...
             reply = MsgBoxWithDNAA(MSGBOX.Question, 'Default URL Handler', \
                'Armory is not set as your default application for handling '
-               '"bitcoin:" links.  Would you like to use Armory as the '
-               'default?', 'Do not ask this question again')
+               '"%s:" links.  Would you like to use Armory as the '
+               'default?' % getCoinText(capitalized=False), 'Do not ask this question again')
 
             if reply[1]==True:
                LOGINFO('URL-register:  do not ask again:  always %s', str(reply[0]))
@@ -1536,10 +1537,10 @@ class ArmoryMainWindow(QMainWindow):
             LOGINFO('Registering Armory  for current user')
             baseDir = os.path.dirname(unicode(passstr[0:(rtlength*2)], encoding='utf16'))
             regKeys = []
-            regKeys.append(['Software\\Classes\\bitcoin', '', 'URL:bitcoin Protocol'])
-            regKeys.append(['Software\\Classes\\bitcoin', 'URL Protocol', ""])
-            regKeys.append(['Software\\Classes\\bitcoin\\shell', '', None])
-            regKeys.append(['Software\\Classes\\bitcoin\\shell\\open', '',  None])
+            regKeys.append(['Software\\Classes\\%s' % getCoinText(capitalized=False), '', 'URL:%s Protocol' % getCoinText(capitalized=False)])
+            regKeys.append(['Software\\Classes\\%s' % getCoinText(capitalized=False), 'URL Protocol', ""])
+            regKeys.append(['Software\\Classes\\%s\\shell' % getCoinText(capitalized=False), '', None])
+            regKeys.append(['Software\\Classes\\%s\\shell\\open' % getCoinText(capitalized=False), '',  None])
 
             for key,name,val in regKeys:
                dkey = '%s\\%s' % (key,name)
@@ -1549,9 +1550,9 @@ class ArmoryMainWindow(QMainWindow):
                CloseKey(registryKey)
 
             regKeysU = []
-            regKeysU.append(['Software\\Classes\\bitcoin\\shell\\open\\command',  '', \
+            regKeysU.append(['Software\\Classes\\%s\\shell\\open\\command' % getCoinText(capitalized=False),  '', \
                            modulepathname])
-            regKeysU.append(['Software\\Classes\\bitcoin\\DefaultIcon', '',  \
+            regKeysU.append(['Software\\Classes\\%s\\DefaultIcon' % getCoinText(capitalized=False), '',  \
                           '"%s\\armory48x48.ico"' % baseDir])
             for key,name,val in regKeysU:
                dkey = '%s\\%s' % (key,name)
@@ -5481,7 +5482,7 @@ class ArmoryMainWindow(QMainWindow):
             receive %s payments regardless of whether you are online,
             but you will have to verify that payment through another service
             until Armory is finished this initialization.""" % (getCoinText(),
-                space, getCoinText()))
+                getCoinText(), space, getCoinText()))
          if state == 'InitializingDoneSoon':
             return ( \
             'The software is downloading and processing the latest activity '
