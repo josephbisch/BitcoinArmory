@@ -31,8 +31,10 @@ COIN = 'Bitcoin'
 
 # Use the genesis block to kick things off. (Might not work on Windows.)
 blkfile = open(os.environ['HOME'] + '/.bitcoin/blocks/blk00000.dat','r')
+magic = 'f9beb4d9'
 if COIN=='Namecoin':
    blkfile = open(os.environ['HOME'] + '/.namecoin/blk0001.dat','r')
+   magic = 'f9beb4fe'
 blkfile.seek(8,0)
 genBlock = PyBlock().unserialize(blkfile.read(80 + 1 + 285))
 blkfile.close()
@@ -243,12 +245,12 @@ printBlkInfo(Blk5A, '')
 # Now serialize the block data into .dat files so we can feed them into a 
 # program that claims to handle reorgs
 def writeBlkBin(fileHandle, blk):
-   fileHandle.write( hex_to_binary('f9beb4d9') )
+   fileHandle.write( hex_to_binary(magic) )
    fileHandle.write( int_to_binary(blk.getSize(), widthBytes=4) )
    fileHandle.write( blk.serialize() )
 
 def writeBlkPrettyHex(fileHandle, blk):
-   fileHandle.write( 'f9beb4d9' + '\n')
+   fileHandle.write( magic + '\n')
    fileHandle.write( int_to_hex(blk.getSize(), widthBytes=4) + '\n');
    fileHandle.write( prettyHex(binary_to_hex(blk.blockHeader.serialize()), \
                               indent=' '*6, withAddr=False) + '\n')
