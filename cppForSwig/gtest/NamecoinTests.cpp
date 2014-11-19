@@ -5,8 +5,15 @@
 
 #include "../log.h"
 #include "../BinaryData.h"
+#include "../BtcUtils.h"
 #include "../BlockObj.h"
 #include "../StoredBlockObj.h"
+#include "../lmdb_wrapper.h"
+#include "../BlockUtils.h"
+#include "../ScrAddrObj.h"
+#include "../BtcWallet.h"
+#include "../BlockDataViewer.h"
+#include "../reorgTest/blkdata.h"
 
 #ifdef _MSC_VER
    #ifdef mlock
@@ -28,7 +35,49 @@
    #endif
 #endif
 
+#define TheBDM (*theBDM)
+
 //#define READHEX BinaryData::createFromHex
+
+#if ! defined(_MSC_VER) && ! defined(__MINGW32__)
+/////////////////////////////////////////////////////////////////////////////
+static void rmdir(string src)
+{
+   char* syscmd = new char[4096];
+   sprintf(syscmd, "rm -rf %s", src.c_str());
+   system(syscmd);
+   delete[] syscmd;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+static void mkdir(string newdir)
+{
+   char* syscmd = new char[4096];
+   sprintf(syscmd, "mkdir -p %s", newdir.c_str());
+   system(syscmd);
+   delete[] syscmd;
+}
+#endif
+
+static void concatFile(const string &from, const string &to)
+{
+   std::ifstream i(from, ios::binary);
+   std::ofstream o(to, ios::app | ios::binary);
+   o << i.rdbuf();
+}
+
+static void setBlocks(const std::vector<std::string> &files, const std::string &to)
+{
+   std::ofstream o(to, ios::trunc | ios::binary);
+   o.close();
+   for (const std::string &f : files)
+      concatFile("../reorgTest/blk_" + f + ".dat", to);
+}
+static void nullProgress(unsigned, double, unsigned, unsigned)
+{
+
+}
+
 
 class NamecoinTest : public ::testing::Test
 {
@@ -127,6 +176,136 @@ TEST_F(NamecoinTest, FullBlockUnserialize)
     // probably read the NMC block correctly.
     // Though, we could test more tx data in the future.
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// THESE ARE ARMORY_DB_BARE tests.
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+class BlockUtilsBare : public ::testing::Test
+{
+protected:
+   BlockDataManager_LevelDB *theBDM;
+   BlockDataViewer *theBDV;
+   
+   // Run this before registering a BDM.
+   void regWallet(const vector<BinaryData>& scrAddrs, const string& wltName,
+                  BlockDataViewer*& inBDV, BtcWallet** inWlt)
+   {
+      // Register the standalone address wallet. (All registrations should be
+      // done before initializing the BDM. This is critical!)
+      *inWlt = inBDV->registerWallet(scrAddrs, wltName, false);
+   }
+   
+   
+   /////////////////////////////////////////////////////////////////////////////
+   virtual void SetUp()
+   {
+      LOGDISABLESTDOUT();
+      magic_ = READHEX(NAMECOIN_MAGIC_BYTES);
+      ghash_ = READHEX(MAINNET_GENESIS_HASH_HEX);
+      gentx_ = READHEX(MAINNET_GENESIS_TX_HASH_HEX);
+      zeros_ = READHEX("00000000");
+      
+      blkdir_ = string("./blkfiletest");
+      homedir_ = string("./fakehomedir");
+      ldbdir_ = string("./ldbtestdir");
+      
+      
+      mkdir(blkdir_);
+      mkdir(homedir_);
+      
+      // Put the first 5 blocks into the blkdir
+      blk0dat_ = BtcUtils::getBlkFilename("Namecoin", blkdir_, 0);
+      setBlocks({"0", "1", "2", "3", "4", "5"}, blk0dat_);
+      
+      config.armoryDbType = ARMORY_DB_BARE;
+      config.pruneType = DB_PRUNE_NONE;
+      config.blkFileLocation = blkdir_;
+      config.levelDBLocation = ldbdir_;
+      
+      config.genesisBlockHash = ghash_;
+      config.genesisTxHash = gentx_;
+      config.magicBytes = magic_;
+      
+      theBDM = new BlockDataManager_LevelDB(config);
+      theBDM->openDatabase();
+      iface_ = theBDM->getIFace();
+      
+      theBDV = new BlockDataViewer(theBDM);
+   }
+   
+
+   /////////////////////////////////////////////////////////////////////////////
+   virtual void TearDown(void)
+   {
+      delete theBDM;
+      delete theBDV;
+      
+      theBDM = nullptr;
+      theBDV = nullptr;
+      
+      rmdir(blkdir_);
+      rmdir(homedir_);
+      
+      #ifdef _MSC_VER
+         rmdir("./ldbtestdir");
+         mkdir("./ldbtestdir");
+      #else
+         string delstr = ldbdir_ + "/*";
+         rmdir(delstr);
+      #endif
+      LOGENABLESTDOUT();
+      CLEANUP_ALL_TIMERS();
+   }
+   
+   BlockDataManagerConfig config;
+   
+   LMDBBlockDatabase* iface_;
+   BinaryData magic_;
+   BinaryData ghash_;
+   BinaryData gentx_;
+   BinaryData zeros_;
+   
+   string blkdir_;
+   string homedir_;
+   string ldbdir_;
+   string blk0dat_;
+};
+
+TEST_F(BlockUtilsBare, Load5Blocks)
+{
+   vector<BinaryData> scrAddrVec;
+   scrAddrVec.push_back(TestChain::scrAddrA);
+   scrAddrVec.push_back(TestChain::scrAddrB);
+   scrAddrVec.push_back(TestChain::scrAddrC);
+   scrAddrVec.push_back(TestChain::scrAddrD);
+   scrAddrVec.push_back(TestChain::scrAddrE);
+   scrAddrVec.push_back(TestChain::scrAddrF);
+   BtcWallet* wlt;
+   regWallet(scrAddrVec, "wallet1", theBDV, &wlt);
+
+   TheBDM.doInitialSyncOnLoad(nullProgress);
+   theBDV->scanWallets();
+
+   const ScrAddrObj* scrObj;
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrA);
+   EXPECT_EQ(scrObj->getFullBalance(), 50*COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrB);
+   EXPECT_EQ(scrObj->getFullBalance(), 70*COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrC);
+   EXPECT_EQ(scrObj->getFullBalance(), 20*COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrD);
+   EXPECT_EQ(scrObj->getFullBalance(), 65*COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrE);
+   EXPECT_EQ(scrObj->getFullBalance(), 30*COIN);
+   scrObj = wlt->getScrAddrObjByKey(TestChain::scrAddrF);
+   EXPECT_EQ(scrObj->getFullBalance(), 5*COIN);
+ 
+   EXPECT_EQ(wlt->getFullBalance(), 240*COIN);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
