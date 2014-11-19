@@ -766,15 +766,6 @@ public:
                                 vector<size_t> * offsetsIn=NULL,
                                 vector<size_t> * offsetsOut=NULL)
    {
-      /*if(nBlk >= 19200) {
-         // Check for merge mined blocks and increment ptr???
-         // Problem is that nBlk isn't currently the block height.
-         // getBlockHeight() returns uint32_max (because TxRef is null)
-         // We probably need to check the data to see whether the block is
-         // merge mined anyway (because nBlk >= 19200 is not necessarily
-         // merge mined).
-      }*/
-      
       BinaryRefReader brr(ptr, size);  
       
       if (brr.getSizeRemaining() < 4)
