@@ -62,7 +62,6 @@ ARMORY_INFO_SIGN_ADDR = '1NWvhByxfTXPYNT4zMBmEY3VL8QJQtQoei'
 ARMORY_INFO_SIGN_PUBLICKEY = ('04'
       'af4abc4b24ef57547dd13a1110e331645f2ad2b99dfe1189abb40a5b24e4ebd8'
       'de0c1c372cc46bbee0ce3d1d49312e416a1fa9c7bb3e32a7eb3867d1c6d1f715')
-# We can leave SATOSHI_PUBLIC_KEY here, since it is the same for both Bitcoin and Namecoin
 SATOSHI_PUBLIC_KEY = ( '04'
       'fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0'
       'ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284')
@@ -257,6 +256,9 @@ if USE_NAMECOIN or USE_NAMECOIN_TESTNET:
    COIN = 'Namecoin'
    CLI_OPTIONS.disableTorrent = True
    DOWNLOAD_URL = 'http://www.namecoin.info'
+   SATOSHI_PUBLIC_KEY = ( '04'
+           'ba207043c1575208f08ea6ac27ed2aedd4f84e70b874db129acb08e6109a3bbb'
+           '7c479ae22565973ebf0ac0391514511a22cb9345bdb772be20cfbd38be578b0c')
 
 # Set default port for inter-process communication
 if CLI_OPTIONS.interport < 0:
