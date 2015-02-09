@@ -304,8 +304,7 @@ if OS_WINDOWS:
    else:
       BLKFILE_DIR = os.path.join(BTC_HOME_DIR, 'blocks')
    ARMORY_HOME_DIR = os.path.join(USER_HOME_DIR, 'Armory', SUBDIR)
-   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR,
-           'blk0001.dat' if COIN == 'Namecoin' else 'blk00000.dat')
+   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR, 'blk00000.dat')
 elif OS_LINUX:
    OS_NAME         = 'Linux'
    OS_VARIANT      = platform.linux_distribution()
@@ -320,8 +319,7 @@ elif OS_LINUX:
    else:
       BLKFILE_DIR = os.path.join(BTC_HOME_DIR, 'blocks')
    ARMORY_HOME_DIR = os.path.join(USER_HOME_DIR, '.armory', SUBDIR)
-   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR,
-           'blk0001.dat' if COIN == 'Namecoin' else 'blk00000.dat')
+   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR, 'blk00000.dat')
 elif OS_MACOSX:
    platform.mac_ver()
    OS_NAME         = 'MacOSX'
@@ -337,8 +335,7 @@ elif OS_MACOSX:
    else:
       BLKFILE_DIR = os.path.join(BTC_HOME_DIR, 'blocks')
    ARMORY_HOME_DIR = os.path.join(USER_HOME_DIR, 'Armory', SUBDIR)
-   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR, 
-           'blk0001.dat' if COIN == 'Namecoin' else 'blk00000.dat')
+   BLKFILE_1stFILE = os.path.join(BLKFILE_DIR, 'blk00000.dat')
 else:
    print '***Unknown operating system!'
    print '***Cannot determine default directory locations'
@@ -3827,4 +3824,4 @@ def onlineModeIsPossible(btcdir=BTC_HOME_DIR):
    return isInternetAvailable(forceOnline=CLI_OPTIONS.forceOnline) != \
                 INTERNET_STATUS.Unavailable and \
       satoshiIsAvailable() and \
-      (os.path.exists(os.path.join(btcdir, 'blocks')) if COIN == 'Bitcoin' else 1)
+      os.path.exists(os.path.join(btcdir, 'blocks'))

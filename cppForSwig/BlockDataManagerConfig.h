@@ -28,7 +28,6 @@ struct BlockDataManagerConfig
    
    string blkFileLocation;
    string levelDBLocation;
-   string chain;
    
    BinaryData genesisBlockHash;
    BinaryData genesisTxHash;

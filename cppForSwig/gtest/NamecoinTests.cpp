@@ -217,7 +217,7 @@ protected:
       mkdir(homedir_);
       
       // Put the first 5 blocks into the blkdir
-      blk0dat_ = BtcUtils::getBlkFilename("Namecoin", blkdir_, 0);
+      blk0dat_ = BtcUtils::getBlkFilename(blkdir_, 0);
       setBlocks({"0", "1", "2", "3", "4", "5"}, blk0dat_);
       
       config.armoryDbType = ARMORY_DB_BARE;

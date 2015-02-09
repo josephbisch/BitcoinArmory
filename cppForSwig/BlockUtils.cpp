@@ -81,8 +81,7 @@ public:
       }
       while(numBlkFiles < UINT16_MAX)
       {
-         string chain = "Namecoin";
-         string path = BtcUtils::getBlkFilename(chain, blkFileLocation_, numBlkFiles);
+         string path = BtcUtils::getBlkFilename(blkFileLocation_, numBlkFiles);
          uint64_t filesize = BtcUtils::GetFileSize(path);
          if(filesize == FILE_DOES_NOT_EXIST)
             break;

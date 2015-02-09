@@ -5838,11 +5838,11 @@ class ArmoryMainWindow(QMainWindow):
                   LOGERROR('Should not usually get here')
                   setOnlyDashModeVisible()
                   setBtnFrameVisible(True, \
-                     'Try reinstalling the %s '
-                     'software then restart Armory.  If you continue to have '
-                     'problems, please contact Armory\'s core developer at '
-                     '<a href="mailto:support@bitcoinarmory.com?Subject=Bitcoind%20Crash"'
-                     '>support@bitcoinarmory.com</a>.' % getCoinText())
+                     """Try reinstalling the %s 
+                     software then restart Armory.  If you continue to have 
+                     problems, please contact Armory\'s core developer at 
+                     <a href="mailto:support@bitcoinarmory.com?Subject=Bitcoind%%20Crash"
+                     >support@bitcoinarmory.com</a>.""" % (getCoinText(),))
                   setBtnRowVisible(DASHBTNS.Settings, True)
                   setBtnRowVisible(DASHBTNS.Install, True)
                   LOGINFO('Dashboard switched to auto-BtcdCrashed')
