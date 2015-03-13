@@ -1,3 +1,10 @@
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//  Copyright (C) 2011-2015, Armory Technologies, Inc.                        //
+//  Distributed under the GNU Affero General Public License (AGPL v3)         //
+//  See LICENSE or http://www.gnu.org/licenses/agpl.html                      //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
 #include "Blockchain.h"
 #include "BDM_supportClasses.h"
 #include "BlockWriteBatcher.h"
@@ -29,10 +36,8 @@ static void createUndoDataFromBlock(
 {
    SCOPED_TIMER("createUndoDataFromBlock");
 
-   LMDBEnv::Transaction tx(&iface->dbEnv_, LMDB::ReadOnly);
-   StoredHeader sbh;
-
    // Fetch the full, stored block
+   StoredHeader sbh;
    iface->getStoredHeader(sbh, hgt, dup, true);
    if (!sbh.haveFullBlock())
       throw runtime_error("Cannot get undo data for block because not full!");
@@ -161,9 +166,6 @@ public:
          throw *errorProcessing_;
    }
 
-   //const list<StoredTx>& removedTxes() const { return removedTxes_; }
-   //const list<StoredTx>& addedTxes() const { return addedTxes_; }
-
 private:
    shared_ptr<std::exception> errorProcessing_;
 
@@ -207,7 +209,8 @@ private:
    void updateBlockDupIDs(void)
    {
       //create a readwrite tx to update the dupIDs
-      LMDBEnv::Transaction tx(&iface_->dbEnv_, LMDB::ReadWrite);
+      LMDBEnv::Transaction tx;
+      iface_->beginDBTransaction(&tx, HEADERS, LMDB::ReadWrite);
 
       BlockHeader* thisHeaderPtr = branchPtr_;
 
@@ -242,7 +245,7 @@ private:
          uint32_t hgt = thisHeaderPtr->getBlockHeight();
          uint8_t  dup = thisHeaderPtr->getDuplicateID();
 
-         blockWrites.applyBlockToDB(hgt, dup, *scrAddrData_);
+         blockWrites.reorgApplyBlock(hgt, dup, *scrAddrData_);
       }
    }
 

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //                                                                            //
-//  Copyright (C) 2011-2014, Armory Technologies, Inc.                        //
+//  Copyright (C) 2011-2015, Armory Technologies, Inc.                        //
 //  Distributed under the GNU Affero General Public License (AGPL v3)         //
 //  See LICENSE or http://www.gnu.org/licenses/agpl.html                      //
 //                                                                            //
@@ -89,6 +89,8 @@ typedef std::pair<size_t, uint64_t> BlockFilePosition;
 ////////////////////////////////////////////////////////////////////////////////
 class BlockDataManager_LevelDB
 {
+   void grablock(uint32_t n);
+
 
 private:
    BlockDataManagerConfig config_;
@@ -134,6 +136,7 @@ private:
 
    BDM_state BDMstate_ = BDM_offline;
 
+
 public:
    bool                               sideScanFlag_ = false;
    typedef function<void(BDMPhase, double,unsigned, unsigned)> ProgressCallback;
@@ -144,6 +147,8 @@ public:
       virtual ~Notifier() { }
       virtual void notify()=0;
    };
+   
+   string criticalError_;
 
 private:
    Notifier* notifier_ = nullptr;
@@ -168,7 +173,7 @@ public:
          notifier_->notify(); 
    }
    
-   bool hasNotifier() const { return notifier_; }
+   bool hasNotifier() const { return notifier_ != nullptr; }
 
    
    
@@ -211,8 +216,13 @@ private:
          ProgressReporter &prog,
          const BlockFilePosition &fileAndOffset
       );
+   
    void deleteHistories(void);
+   void wipeHistoryAndHintDB(void);
+
    void addRawBlockToDB(BinaryRefReader & brr, bool updateDupID = true);
+   uint32_t findFirstBlockToScan(void);
+   void findFirstBlockToApply(void);
 
 public:
 
@@ -253,13 +263,16 @@ public:
    
    vector<BinaryData> missingBlockHashes() const { return missingBlockHashes_; }
 
-   void startSideScan(
-      const function<void(const BinaryData&, double prog,unsigned time)> &cb
+   bool startSideScan(
+      const function<void(const vector<string>&, double prog,unsigned time)> &cb
    );
 
    void wipeScrAddrsSSH(const vector<BinaryData>& saVec);
 
    bool isRunning(void) const { return BDMstate_ != BDM_offline; }
+   bool isReady(void) const   { return BDMstate_ == BDM_ready; }
+
+   vector<string> getNextWalletIDToScan(void);
 };
 
 
