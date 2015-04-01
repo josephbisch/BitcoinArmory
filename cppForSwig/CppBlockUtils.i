@@ -222,6 +222,11 @@ namespace std
 }
 
 
+%inline %{
+void force_librt() { timer_create(CLOCK_REALTIME, NULL, NULL); }
+%}
+
+
 /* With our typemaps, we can finally include our other objects */
 %include "BlockObj.h"
 %include "BlockUtils.h"
