@@ -11,7 +11,7 @@ $(package)_patches=darwin.cfg
 define $(package)_config_cmds
   sed -i.old "1s|^|install_sysroot = $(host_prefix)\n|" $($(package)_patch_dir)/darwin.cfg && \
   sed -i.old "s|if 'linux' in target_config.qmake_spec|if 'linux' in target_config.qmake_spec and 'mac' not in target_config.qmake_spec|" configure.py && \
-  $($(package)_prefix)/native/bin/python3 configure.py --confirm-license --qmake=$($(package)_prefix)/native/bin/qmake --sip=$($(package)_prefix)/native/bin/sip --sip-incdir=$($(package)_prefix)/native/include/python3.4m --configuration=$($(package)_patch_dir)/darwin.cfg --sysroot=$($(package)_prefix) --spec=macx-clang-linux
+  $($(package)_prefix)/native/bin/python3 configure.py --confirm-license --bindir=$($(package)_prefix)/bin --qmake=$($(package)_prefix)/native/bin/qmake --sip=$($(package)_prefix)/native/bin/sip --sip-incdir=$($(package)_prefix)/native/include/python3.4m --configuration=$($(package)_patch_dir)/darwin.cfg --sysroot=$($(package)_prefix) --spec=macx-clang-linux
 endef
 
 define $(package)_build_cmds
@@ -20,4 +20,8 @@ endef
 
 define $(package)_stage_cmds
   $(MAKE) INSTALL_ROOT=$($(package)_staging_dir) install
+endef
+
+define $(package)_postprocess_cmds
+  rm -f bin/pyrcc5 # Using pyrcc5 from repos
 endef
