@@ -470,15 +470,15 @@ public:
       BinaryDataRef dbKey) const;
 
    bool getStoredTx(StoredTx & stx,
-      BinaryDataRef txHashOrDBKey) const;
+      BinaryData& txHashOrDBKey) const;
 
    bool getStoredTx_byDBKey(StoredTx & stx,
       BinaryDataRef dbKey) const;
 
-   bool getStoredTx_byHash(BinaryDataRef txHash,
+   bool getStoredTx_byHash(const BinaryData& txHash,
       StoredTx* stx = nullptr,
       BinaryData* DBkey = nullptr) const;
-   bool getStoredTx_byHashSuper(BinaryDataRef txHash,
+   bool getStoredTx_byHashSuper(const BinaryData& txHash,
       StoredTx* stx = nullptr,
       BinaryData* DBkey = nullptr) const;
 
@@ -675,7 +675,7 @@ private:
 
    uint32_t             lowestScannedUpTo_;
 
-   vector<uint8_t>      validDupByHeight_;
+   map<uint32_t, uint8_t>      validDupByHeight_;
 
    // In this case, a address is any TxOut script, which is usually
    // just a 25-byte script.  But this generically captures all types

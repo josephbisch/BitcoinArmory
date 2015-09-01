@@ -102,19 +102,7 @@ class ArmoryMainWindow(QMainWindow):
       # SETUP THE WINDOWS DECORATIONS
       self.lblLogoIcon = QLabel()
       if USE_TESTNET:
-         self.setWindowTitle('Armory - Bitcoin Wallet Management [TESTNET]')
-         self.iconfile = ':/armory_icon_green_32x32.png'
-         self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_green_h56.png'))
-         if Colors.isDarkBkgd:
-            self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_white_text_green_h56.png'))
-      elif USE_NAMECOIN:
-         self.setWindowTitle('Armory - Namecoin Wallet Management')
-         self.iconfile = ':/armory_icon_32x32.png'
-         self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_h44.png'))
-         if Colors.isDarkBkgd:
-            self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_white_text_h65.png'))
-      elif USE_NAMECOIN_TESTNET:
-         self.setWindowTitle('Armory - Namecoin Wallet Management [TESTNET]')
+         self.setWindowTitle('Armory - Bitcoin Wallet Management [TESTNET] dlgMain')
          self.iconfile = ':/armory_icon_green_32x32.png'
          self.lblLogoIcon.setPixmap(QPixmap(':/armory_logo_green_h56.png'))
          if Colors.isDarkBkgd:
@@ -3594,7 +3582,7 @@ class ArmoryMainWindow(QMainWindow):
                inputSide.append(UnsignedTxInput(rawTx, txoIdx, None, pubKey))
                break
 
-      minFee = calcMinSuggestedFees(utxoList, sendValues, 0, 1)[1]
+      minFee = calcMinSuggestedFees(utxoList, outValue, 0, 1)
 
       if minFee > 0:
          LOGDEBUG( 'Subtracting fee from Sweep-output')
@@ -6439,9 +6427,16 @@ class ArmoryMainWindow(QMainWindow):
          #it to the user
          if 'rescan' in args[0].lower() or 'rebuild' in args[0].lower():
             result = MsgBoxWithDNAA(self, self, MSGBOX.Critical, 'BDM error!', args[0], 
-                                    "Rebuild and rescan on next start", dnaaStartChk=True)
+                                    "Rebuild and rescan on next start", dnaaStartChk=False)
             if result[1] == True:
                touchFile( os.path.join(ARMORY_HOME_DIR, 'rebuild.flag') )
+         
+         elif 'factory reset' in args[0].lower():
+            result = MsgBoxWithDNAA(self, self, MSGBOX.Critical, 'BDM error!', args[0], 
+                                    "Factory reset on next start", dnaaStartChk=False)
+            if result[1] == True:
+               DlgFactoryReset(self, self).exec_()           
+         
          else:   
             QMessageBox.critical(self, tr('BlockDataManager Warning'), \
                               tr(args[0]), \
@@ -6885,6 +6880,9 @@ class ArmoryMainWindow(QMainWindow):
             self.actuallyDoExitNow(STOPPED_ACTION, 1)
             return
          
+         self.shutdownBitcoindThread = threading.Thread(target=TheSDM.stopBitcoind)
+         self.shutdownBitcoindThread.start()
+         
          TheBDM.registerCppNotification(self.actuallyDoExitNow)
          TheBDM.beginCleanShutdown()
 
@@ -6909,7 +6907,11 @@ class ArmoryMainWindow(QMainWindow):
 
       
       # This will do nothing if bitcoind isn't running.
-      TheSDM.stopBitcoind()
+      try:
+         self.shutdownBitcoindThread.join()
+      except:
+         pass
+
       
 
       from twisted.internet import reactor

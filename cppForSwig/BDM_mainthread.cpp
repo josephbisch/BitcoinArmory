@@ -363,9 +363,9 @@ try
          throw runtime_error(bdm->criticalError_.c_str());
       }
 
-      if(bdv->rescanZC_)
+      if(bdv->getZCflag())
       {
-         bdv->rescanZC_ = false;
+         bdv->flagRescanZC(false);
          if (bdv->parseNewZeroConfTx() == true)
          {
             set<BinaryData> newZCTxHash = bdv->getNewZCTxHash();
@@ -419,7 +419,9 @@ try
          );
       }
       
+#ifndef _DEBUG_REPLAY_BLOCKS
       pimpl->inject->wait(1000);
+#endif
    }
 }
 catch (std::exception &e)

@@ -1362,7 +1362,7 @@ class DlgLockboxManager(ArmoryDialog):
          blkExploreURL   = 'https://bitinfocharts.com/namecoin/tx/%s' % txHash
       elif USE_NAMECOIN_TESTNET:
          # TODO: Find an explorer that is up-to-date
-         blkExploreTitle = 'View on namecoin.info'
+         blkExploreTitle = 'View on namecoin.org'
          blkExploreURL   = 'http://testnet.explorer.namecoin.info/tx/%s' % txHash
       else:
          blkExploreTitle = 'View on blockchain.info'
@@ -2871,6 +2871,7 @@ class DlgMultiSpendReview(ArmoryDialog):
       self.lblFinalChk    = QLabel()
       self.btnFinalBroad  = QPushButton(tr('Broadcast'))
       self.btnFinalExport = QPushButton(tr('Export'))
+      self.doneButton = QPushButton(tr('Done'))
       self.lblFinalChk.setMinimumSize(CHKW,CHKH)
       layoutBtns = QHBoxLayout()
       layoutBtns.addWidget(self.btnLoadImport)
@@ -2879,12 +2880,14 @@ class DlgMultiSpendReview(ArmoryDialog):
       layoutBtns.addWidget(self.lblFinalChk)
       layoutBtns.addWidget(self.btnFinalBroad)
       layoutBtns.addWidget(self.btnFinalExport)
+      layoutBtns.addWidget(self.doneButton)
       frmButtons = QFrame()
       frmButtons.setLayout(layoutBtns)
 
       self.connect(self.btnLoadImport,  SIGNAL('clicked()'), self.doImport)
       self.connect(self.btnFinalBroad,  SIGNAL('clicked()'), self.doBroadcast)
       self.connect(self.btnFinalExport, SIGNAL('clicked()'), self.doExport)
+      self.connect(self.doneButton, SIGNAL('clicked()'), self.accept)
 
       frmMain = makeVertFrame([lblDescr, 
                                HLINE(),
@@ -2905,6 +2908,7 @@ class DlgMultiSpendReview(ArmoryDialog):
       layoutMain.addWidget(frmMain)
       self.setLayout(layoutMain)
 
+      self.setWindowTitle('Review and Sign')
       self.setMinimumWidth(750)
       
       # Evaluate SigningStatus returns per-wallet details if a wlt is given

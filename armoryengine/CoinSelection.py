@@ -65,6 +65,9 @@ from armoryengine.ArmoryUtils import CheckHash160, binary_to_hex, coin2str, \
    COIN
 from armoryengine.Timer import TimeThisFunction
 from armoryengine.Transaction import *
+import BDM
+from bitcoinrpc_jsonrpc.authproxy import JSONRPCException
+
 
 
 ################################################################################
@@ -716,6 +719,10 @@ def PySelectCoins(unspentTxOutInfo, targetOutVal, minFee=0, numRand=10, margin=C
             break
    return finalSelection
 
+NBLOCKS_TO_CONFIRM = 3
+# ONE_BTC * 144 / 250
+DEFAULT_PRIORITY = 57600000
+
 ################################################################################
 def calcMinSuggestedFeesHackMS(selectCoinsResult, sendValues, preSelectedFee, 
                                                          numRecipients):
@@ -737,34 +744,20 @@ def calcMinSuggestedFeesHackMS(selectCoinsResult, sendValues, preSelectedFee,
 
    numBytes += 200*numRecipients  # assume large lockbox outputs
    numKb = int(numBytes / 1000)
-
+   suggestedFee = (1+numKb)*estimateFee()
    if numKb>10:
-      return [(1+numKb)*MIN_RELAY_TX_FEE, (1+numKb)*MIN_TX_FEE]
-
+      return suggestedFee
+   
    # Compute raw priority of tx
    prioritySum = 0
    for utxo in selectCoinsResult:
       prioritySum += utxo.getValue() * utxo.getNumConfirm()
    prioritySum = prioritySum / numBytes
 
-   # Any tiny/dust outputs?
-   haveDustOutputs = (0<change<CENT or targetOutVal<CENT)
+   if(prioritySum >= estimatePriority() and numBytes < 10000):
+      return 0
 
-   if((not haveDustOutputs) and \
-      prioritySum >= ONE_BTC * 144 / 250. and \
-      numBytes < 10000):
-      return [0,0]
-
-   # This cannot be a free transaction.
-   minFeeMultiplier = (1 + numKb)
-
-   # At the moment this condition never triggers
-   if minFeeMultiplier<1.0 and haveDustOutputs:
-      minFeeMultiplier = 1.0
-
-
-   return [minFeeMultiplier * MIN_RELAY_TX_FEE, \
-           minFeeMultiplier * MIN_TX_FEE]
+   return suggestedFee
    
       
 
@@ -790,7 +783,7 @@ def calcMinSuggestedFees(selectCoinsResult, sendValues, preSelectedFee,
    #       TxOut/TxIn size given that it now accepts P2SH and Multisig
 
    if len(selectCoinsResult)==0:
-      return [-1,-1]
+      return -1
 
    targetOutVal = sum(sendValues)
    paid = targetOutVal + preSelectedFee
@@ -802,6 +795,9 @@ def calcMinSuggestedFees(selectCoinsResult, sendValues, preSelectedFee,
    numBytes +=  35 * (numRecipients + (1 if change>0 else 0))
    numKb = int(numBytes / 1000)
 
+   suggestedFee = (1+numKb)*estimateFee()
+   if numKb>10:
+      return suggestedFee
    # Compute raw priority of tx
    prioritySum = 0
    for utxo in selectCoinsResult:
@@ -850,21 +846,7 @@ def calcMinSuggestedFees(selectCoinsResult, sendValues, preSelectedFee,
    # Any tiny/dust outputs?
    haveDustOutputs = (0<change<CENT or targetOutVal<CENT)
 
-   if((not haveDustOutputs) and \
-      prioritySum >= ONE_BTC * 144 / 250. and \
-      numBytes < 10000):
-      return [0,0]
-
-   # This cannot be a free transaction.
-   minFeeMultiplier = (1 + numKb)
-
-   # At the moment this condition never triggers
-   if minFeeMultiplier<1.0 and haveDustOutputs:
-      minFeeMultiplier = 1.0
-
-
-   return [minFeeMultiplier * MIN_RELAY_TX_FEE, \
-           minFeeMultiplier * MIN_TX_FEE]
+   return suggestedFee
 
 
 
@@ -942,6 +924,9 @@ def calcMinSuggestedFeesNew(selectCoinsResult, scriptValPairs, preSelectedFee,
       numBytes += len(changeScript) if changeScript else 35
 
    numKb = int(numBytes / 1000)
+
+   if numKb>10:
+      return [(1+numKb)*MIN_RELAY_TX_FEE, (1+numKb)*MIN_TX_FEE]
 
    # Compute raw priority of tx
    prioritySum = 0

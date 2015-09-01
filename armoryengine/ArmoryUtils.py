@@ -66,7 +66,7 @@ LEVELDB_BLKDATA = 'leveldb_blkdata'
 LEVELDB_HEADERS = 'leveldb_headers'
 
 # Version Numbers 
-BTCARMORY_VERSION    = (0, 93,  0, 0)  # (Major, Minor, Bugfix, AutoIncrement) 
+BTCARMORY_VERSION    = (0, 93,  2, 0)  # (Major, Minor, Bugfix, AutoIncrement) 
 PYBTCWALLET_VERSION  = (1, 35,  0, 0)  # (Major, Minor, Bugfix, AutoIncrement)
 
 ARMORY_DONATION_ADDR = '1ArmoryXcfq7TnCSuZa9fQjRYwJ4bkRKfv'
@@ -120,8 +120,10 @@ parser.add_option("--multisigfile",  dest="multisigFile",  default=DEFAULT, type
 parser.add_option("--force-wallet-check", dest="forceWalletCheck", default=False, action="store_true", help="Force the wallet sanity check on startup")
 parser.add_option("--disable-modules", dest="disableModules", default=False, action="store_true", help="Disable looking for modules in the execution directory")
 parser.add_option("--disable-conf-permis", dest="disableConfPermis", default=False, action="store_true", help="Disable forcing permissions on bitcoin.conf")
-parser.add_option("--detsign",         dest="enableDetSign", default=False,   action="store_true", help="Enable Transaction Deterministic Signing (RFC 6979)")
+parser.add_option("--disable-detsign", dest="enableDetSign", action="store_false", help="Disable Transaction Deterministic Signing (RFC 6979)")
+parser.add_option("--enable-detsign", dest="enableDetSign", action="store_true", help="Enable Transaction Deterministic Signing (RFC 6979) - Enabled by default")
 parser.add_option("--supernode", dest="enableSupernode", default=False, action="store_true", help="Enabled Exhaustive Blockchain Tracking")
+parser.set_defaults(enableDetSign=True)
 
 # Pre-10.9 OS X sometimes passes a process serial number as -psn_0_xxxxxx. Nuke!
 if sys.platform == 'darwin':
@@ -276,7 +278,7 @@ if USE_NAMECOIN or USE_NAMECOIN_TESTNET:
    MIN_RELAY_TX_FEE = 100000
    COIN = 'Namecoin'
    CLI_OPTIONS.disableTorrent = True
-   DOWNLOAD_URL = 'http://www.namecoin.info'
+   DOWNLOAD_URL = 'http://www.namecoin.org'
    SATOSHI_PUBLIC_KEY = ( '04'
            'ba207043c1575208f08ea6ac27ed2aedd4f84e70b874db129acb08e6109a3bbb'
            '7c479ae22565973ebf0ac0391514511a22cb9345bdb772be20cfbd38be578b0c')
@@ -3118,7 +3120,9 @@ def getRSFromDERSig(derSig):
    assert(codeByte == '\x02')
    # Now we have the (r,s) values of the
 
-   return r[-32:], s[-32:]
+   rFinal = r.lstrip('\x00').rjust(32, '\x00')
+   sFinal = s.lstrip('\x00').rjust(32, '\x00')
+   return rFinal, sFinal
 
 
 #############################################################################
